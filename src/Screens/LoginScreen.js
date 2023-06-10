@@ -2,57 +2,106 @@ import { StatusBar } from "expo-status-bar";
 import {
     Dimensions,
     ImageBackground,
+    Keyboard,
+    KeyboardAvoidingView,
+    Platform,
     Pressable,
     StyleSheet,
     Text,
     TextInput,
+    TouchableWithoutFeedback,
     View,
 } from "react-native";
 import bgrimg from "../../assets/img/background.png";
+import { useState } from "react";
 
 const LoginScreen = () => {
+    const [userName, setUserName] = useState("");
+    const [password, setPassword] = useState("");
+    const [showPassword, setShowPassword] = useState(true);
+
+    const onPressShowPassword = () => {
+        const passState = showPassword;
+        setShowPassword(!passState);
+    };
+
+    const signIn = () => {
+        const userData = {
+            userName,
+            password,
+        };
+        console.debug(userData);
+        setUserName("");
+        setPassword("");
+        setShowPassword(true);
+    };
+
     return (
-        <View style={styles.container}>
-            <ImageBackground
-                source={bgrimg}
-                style={styles.background}
-                imageStyle={{
-                    resizeMode: "cover",
-                    height: Dimensions.get("window").height,
-                }}
-            >
-                <View style={styles.wrapper}>
-                    <View style={styles.form}>
-                        <Text style={styles.title}>Увійти</Text>
-                        <View style={styles.inputWrapper}>
-                            <TextInput
-                                style={styles.input}
-                                placeholder="Адреса електронної пошти"
-                            />
-                            <View style={styles.passInputWrapper}>
-                                <TextInput
-                                    style={styles.input}
-                                    placeholder="Пароль"
-                                    secureTextEntry={true}
-                                />
-                                <Pressable style={styles.btnShowPass}>
-                                    <Text>Показати</Text>
-                                </Pressable>
-                            </View>
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+            <View style={styles.container}>
+                <ImageBackground
+                    source={bgrimg}
+                    style={styles.background}
+                    imageStyle={{
+                        resizeMode: "cover",
+                        height: Dimensions.get("window").height,
+                    }}
+                >
+                    <View style={styles.wrapper}>
+                        <View style={styles.form}>
+                            <Text style={styles.title}>Увійти</Text>
+                            <KeyboardAvoidingView
+                                behavior={
+                                    Platform.OS === "ios" ? "padding" : "height"
+                                }
+                            >
+                                <View style={styles.inputWrapper}>
+                                    <TextInput
+                                        style={styles.input}
+                                        placeholder="Адреса електронної пошти"
+                                        value={userName}
+                                        onChangeText={setUserName}
+                                    />
+                                    <View style={styles.passInputWrapper}>
+                                        <TextInput
+                                            style={styles.input}
+                                            placeholder="Пароль"
+                                            secureTextEntry={showPassword}
+                                            value={password}
+                                            onChangeText={setPassword}
+                                        />
+                                        <Pressable
+                                            style={styles.btnShowPass}
+                                            onPress={onPressShowPassword}
+                                        >
+                                            <Text>
+                                                {showPassword
+                                                    ? "Показати"
+                                                    : "Приховати"}
+                                            </Text>
+                                        </Pressable>
+                                    </View>
+                                </View>
+                            </KeyboardAvoidingView>
+                            <Pressable style={styles.btnSubmit}>
+                                <Text
+                                    style={styles.btnSubmitTitle}
+                                    onPress={signIn}
+                                >
+                                    Увійти
+                                </Text>
+                            </Pressable>
+                            <Pressable style={styles.btnSignUp}>
+                                <Text style={styles.btnSignUpTitle}>
+                                    Немає акаунту? Зареєструватися
+                                </Text>
+                            </Pressable>
                         </View>
-                        <Pressable style={styles.btnSubmit}>
-                            <Text style={styles.btnSubmitTitle}>Увійти</Text>
-                        </Pressable>
-                        <Pressable style={styles.btnSignUp}>
-                            <Text style={styles.btnSignUpTitle}>
-                                Немає акаунту? Зареєструватися
-                            </Text>
-                        </Pressable>
                     </View>
-                </View>
-            </ImageBackground>
-            <StatusBar style="auto" />
-        </View>
+                </ImageBackground>
+                <StatusBar style="auto" />
+            </View>
+        </TouchableWithoutFeedback>
     );
 };
 

@@ -2,89 +2,141 @@ import { StatusBar } from "expo-status-bar";
 import {
     Dimensions,
     ImageBackground,
+    Keyboard,
+    KeyboardAvoidingView,
+    Platform,
     Pressable,
     StyleSheet,
     Text,
     TextInput,
+    TouchableWithoutFeedback,
     View,
 } from "react-native";
 import bgrimg from "../../assets/img/background.png";
 import { Circle, Path, Svg } from "react-native-svg";
+import { useState } from "react";
 
 const RegistrationScreen = () => {
+    const [userName, setUserName] = useState("");
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
+    const [showPassword, setShowPassword] = useState(true);
+
+    const onPressShowPassword = () => {
+        const passState = showPassword;
+        setShowPassword(!passState);
+    };
+
+    const signUp = () => {
+        const userData = {
+            userName,
+            email,
+            password,
+        };
+        console.debug(userData);
+        setUserName("");
+        setEmail("");
+        setPassword("");
+        setShowPassword(true);
+    };
+
     return (
-        <View style={styles.container}>
-            <ImageBackground
-                source={bgrimg}
-                style={styles.background}
-                imageStyle={{
-                    resizeMode: "cover",
-                    height: Dimensions.get("window").height,
-                }}
-            >
-                <View style={styles.wrapper}>
-                    <View style={styles.photoWrapper}>
-                        <Pressable style={styles.btnAddImage}>
-                            <Svg
-                                width={25}
-                                height={25}
-                                viewBox="0 0 25 25"
-                                fill="none"
-                                xmlns="http://www.w3.org/2000/svg"
-                            >
-                                <Circle
-                                    cx="12.5"
-                                    cy="12.5"
-                                    r="12"
-                                    fill="white"
-                                    stroke="#FF6C00"
-                                />
-                                <Path
-                                    fillRule="evenodd"
-                                    clipRule="evenodd"
-                                    d="M13 6H12V12H6V13H12V19H13V13H19V12H13V6Z"
-                                    fill="#FF6C00"
-                                />
-                            </Svg>
-                        </Pressable>
-                    </View>
-                    <View style={styles.form}>
-                        <Text style={styles.title}>Реєстрація</Text>
-                        <View style={styles.inputWrapper}>
-                            <TextInput
-                                style={styles.input}
-                                placeholder="Логін"
-                            />
-                            <TextInput
-                                style={styles.input}
-                                placeholder="Адреса електронної пошти"
-                            />
-                            <View style={styles.passInputWrapper}>
-                                <TextInput
-                                    style={styles.input}
-                                    placeholder="Пароль"
-                                    secureTextEntry={true}
-                                />
-                                <Pressable style={styles.btnShowPass}>
-                                    <Text>Показати</Text>
-                                </Pressable>
-                            </View>
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+            <View style={styles.container}>
+                <ImageBackground
+                    source={bgrimg}
+                    style={styles.background}
+                    imageStyle={{
+                        resizeMode: "cover",
+                        height: Dimensions.get("window").height,
+                    }}
+                >
+                    <View style={styles.wrapper}>
+                        <View style={styles.photoWrapper}>
+                            <Pressable style={styles.btnAddImage}>
+                                <Svg
+                                    width={25}
+                                    height={25}
+                                    viewBox="0 0 25 25"
+                                    fill="none"
+                                    xmlns="http://www.w3.org/2000/svg"
+                                >
+                                    <Circle
+                                        cx="12.5"
+                                        cy="12.5"
+                                        r="12"
+                                        fill="white"
+                                        stroke="#FF6C00"
+                                    />
+                                    <Path
+                                        fillRule="evenodd"
+                                        clipRule="evenodd"
+                                        d="M13 6H12V12H6V13H12V19H13V13H19V12H13V6Z"
+                                        fill="#FF6C00"
+                                    />
+                                </Svg>
+                            </Pressable>
                         </View>
-                        <Pressable style={styles.btnSubmit}>
-                            <Text style={styles.btnSubmitTitle}>
-                                Зареєстуватися
-                            </Text>
-                        </Pressable>
-                        <Pressable style={styles.btnLogin}>
-                            <Text style={styles.btnLoginiTitle}>
-                                Вже є акаунт? Увійти
-                            </Text>
-                        </Pressable>
+                        <View style={styles.form}>
+                            <Text style={styles.title}>Реєстрація</Text>
+                            <KeyboardAvoidingView
+                                behavior={
+                                    Platform.OS === "ios" ? "padding" : "height"
+                                }
+                            >
+                                <View style={styles.inputWrapper}>
+                                    <TextInput
+                                        style={styles.input}
+                                        placeholder="Логін"
+                                        value={userName}
+                                        onChangeText={setUserName}
+                                    />
+                                    <TextInput
+                                        style={styles.input}
+                                        placeholder="Адреса електронної пошти"
+                                        value={email}
+                                        onChangeText={setEmail}
+                                    />
+                                    <View style={styles.passInputWrapper}>
+                                        <TextInput
+                                            style={styles.input}
+                                            placeholder="Пароль"
+                                            secureTextEntry={showPassword}
+                                            value={password}
+                                            onChangeText={setPassword}
+                                        />
+                                        <Pressable
+                                            style={styles.btnShowPass}
+                                            onPress={onPressShowPassword}
+                                        >
+                                            <Text>
+                                                {showPassword
+                                                    ? "Показати"
+                                                    : "Приховати"}
+                                            </Text>
+                                        </Pressable>
+                                    </View>
+                                </View>
+                            </KeyboardAvoidingView>
+                            <Pressable
+                                style={styles.btnSubmit}
+                                onPress={signUp}
+                            >
+                                <Text style={styles.btnSubmitTitle}>
+                                    Зареєстуватися
+                                </Text>
+                            </Pressable>
+                            <Pressable style={styles.btnLogin}>
+                                <Text style={styles.btnLoginiTitle}>
+                                    Вже є акаунт? Увійти
+                                </Text>
+                            </Pressable>
+                        </View>
                     </View>
-                </View>
-            </ImageBackground>
-            <StatusBar style="auto" />
-        </View>
+                </ImageBackground>
+                <StatusBar style="auto" />
+            </View>
+        </TouchableWithoutFeedback>
     );
 };
 
