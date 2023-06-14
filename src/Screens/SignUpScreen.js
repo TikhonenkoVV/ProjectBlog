@@ -1,7 +1,4 @@
-import { StatusBar } from "expo-status-bar";
 import {
-    Dimensions,
-    ImageBackground,
     Keyboard,
     KeyboardAvoidingView,
     Platform,
@@ -12,15 +9,19 @@ import {
     TouchableWithoutFeedback,
     View,
 } from "react-native";
-import bgrimg from "../../assets/img/background.png";
 import { Circle, Path, Svg } from "react-native-svg";
 import { useState } from "react";
+import { useNavigation } from "@react-navigation/native";
+import { Background } from "../Components/Background";
+import { BtnStyled } from "../Components/BtnStyled";
 
-const RegistrationScreen = () => {
+const SignUpScreen = () => {
     const [userName, setUserName] = useState("");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [showPassword, setShowPassword] = useState(true);
+
+    const navigation = useNavigation();
 
     const onPressShowPassword = () => {
         const passState = showPassword;
@@ -43,14 +44,7 @@ const RegistrationScreen = () => {
     return (
         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
             <View style={styles.container}>
-                <ImageBackground
-                    source={bgrimg}
-                    style={styles.background}
-                    imageStyle={{
-                        resizeMode: "cover",
-                        height: Dimensions.get("window").height,
-                    }}
-                >
+                <Background>
                     <View style={styles.wrapper}>
                         <View style={styles.photoWrapper}>
                             <Pressable style={styles.btnAddImage}>
@@ -118,23 +112,21 @@ const RegistrationScreen = () => {
                                     </View>
                                 </View>
                             </KeyboardAvoidingView>
-                            <Pressable
-                                style={styles.btnSubmit}
+                            <BtnStyled
                                 onPress={signUp}
+                                title="Зареєстуватися"
+                            />
+                            <Pressable
+                                style={styles.btnLogin}
+                                onPress={() => navigation.navigate("Login")}
                             >
-                                <Text style={styles.btnSubmitTitle}>
-                                    Зареєстуватися
-                                </Text>
-                            </Pressable>
-                            <Pressable style={styles.btnLogin}>
                                 <Text style={styles.btnLoginiTitle}>
                                     Вже є акаунт? Увійти
                                 </Text>
                             </Pressable>
                         </View>
                     </View>
-                </ImageBackground>
-                <StatusBar style="auto" />
+                </Background>
             </View>
         </TouchableWithoutFeedback>
     );
@@ -244,4 +236,4 @@ const styles = StyleSheet.create({
     },
 });
 
-export default RegistrationScreen;
+export default SignUpScreen;

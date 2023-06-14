@@ -1,7 +1,4 @@
-import { StatusBar } from "expo-status-bar";
 import {
-    Dimensions,
-    ImageBackground,
     Keyboard,
     KeyboardAvoidingView,
     Platform,
@@ -12,13 +9,17 @@ import {
     TouchableWithoutFeedback,
     View,
 } from "react-native";
-import bgrimg from "../../assets/img/background.png";
 import { useState } from "react";
+import { useNavigation } from "@react-navigation/native";
+import { Background } from "../Components/Background";
+import { BtnStyled } from "../Components/BtnStyled";
 
 const LoginScreen = () => {
     const [userName, setUserName] = useState("");
     const [password, setPassword] = useState("");
     const [showPassword, setShowPassword] = useState(true);
+
+    const navigation = useNavigation();
 
     const onPressShowPassword = () => {
         const passState = showPassword;
@@ -34,19 +35,13 @@ const LoginScreen = () => {
         setUserName("");
         setPassword("");
         setShowPassword(true);
+        navigation.navigate("Home");
     };
 
     return (
         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
             <View style={styles.container}>
-                <ImageBackground
-                    source={bgrimg}
-                    style={styles.background}
-                    imageStyle={{
-                        resizeMode: "cover",
-                        height: Dimensions.get("window").height,
-                    }}
-                >
+                <Background>
                     <View style={styles.wrapper}>
                         <View style={styles.form}>
                             <Text style={styles.title}>Увійти</Text>
@@ -83,23 +78,20 @@ const LoginScreen = () => {
                                     </View>
                                 </View>
                             </KeyboardAvoidingView>
-                            <Pressable style={styles.btnSubmit}>
-                                <Text
-                                    style={styles.btnSubmitTitle}
-                                    onPress={signIn}
-                                >
-                                    Увійти
-                                </Text>
-                            </Pressable>
-                            <Pressable style={styles.btnSignUp}>
+                            <BtnStyled onPress={signIn} title="Увійти" />
+                            <Pressable
+                                style={styles.btnSignUp}
+                                onPress={() =>
+                                    navigation.navigate("Registration")
+                                }
+                            >
                                 <Text style={styles.btnSignUpTitle}>
                                     Немає акаунту? Зареєструватися
                                 </Text>
                             </Pressable>
                         </View>
                     </View>
-                </ImageBackground>
-                <StatusBar style="auto" />
+                </Background>
             </View>
         </TouchableWithoutFeedback>
     );
@@ -111,14 +103,6 @@ const styles = StyleSheet.create({
         backgroundColor: "#fff",
         alignItems: "center",
         justifyContent: "center",
-    },
-    background: {
-        flex: 1,
-        justifyContent: "center",
-        width: "100%",
-        height: "100%",
-        justifyContent: "flex-end",
-        overflow: "hidden",
     },
     wrapper: {
         position: "relative",
@@ -166,20 +150,6 @@ const styles = StyleSheet.create({
         paddingVertical: 16,
         fontFamily: "Roboto",
         fontSize: 16,
-    },
-    btnSubmit: {
-        width: "100%",
-        height: 50,
-        backgroundColor: "#FF6C00",
-        borderRadius: 25,
-        justifyContent: "center",
-        alignItems: "center",
-        marginBottom: 16,
-    },
-    btnSubmitTitle: {
-        fontFamily: "Roboto",
-        fontSize: 16,
-        color: "#fff",
     },
     btnSignUpTitle: {
         fontFamily: "Roboto",
