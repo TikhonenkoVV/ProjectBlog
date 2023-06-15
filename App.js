@@ -7,6 +7,7 @@ import SignUpScreen from "./src/Screens/SignUpScreen";
 import Home from "./src/Screens/Home";
 import { CommentsScreen } from "./src/Screens/CommentsScreen";
 import { CreatePostsScreen } from "./src/Screens/CreatePostsScreen";
+import MapScreen from "./src/Screens/MapScreen";
 
 const MainStack = createStackNavigator();
 
@@ -54,6 +55,13 @@ export default App = () => {
                     component={CommentsScreen}
                     options={{
                         title: "Коментарі",
+                        ...defaultOptions,
+                    }}
+                />
+                <MainStack.Screen
+                    name="Map"
+                    component={MapScreen}
+                    options={{
                         ...defaultOptions,
                     }}
                 />
