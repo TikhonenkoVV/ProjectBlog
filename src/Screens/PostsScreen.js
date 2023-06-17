@@ -8,10 +8,11 @@ import {
     Image,
     ScrollView,
 } from "react-native";
-import { Path, Svg } from "react-native-svg";
+import { SvgXml } from "react-native-svg";
 import post_01 from "../../assets/img/post-photo-01.jpg";
 import post_02 from "../../assets/img/post-photo-02.jpg";
 import post_03 from "../../assets/img/post-photo-03.jpg";
+import { iconComments, iconMarker } from "../../assets/img/icons";
 
 const PostsScreen = () => {
     const navigation = useNavigation();
@@ -41,25 +42,7 @@ const PostsScreen = () => {
                             ...styles.statsItem,
                         }}
                     >
-                        <Svg
-                            width="24"
-                            height="24"
-                            viewBox="0 0 24 24"
-                            // fill="none"
-                            fill="#FF6C00"
-                            xmlns="http://www.w3.org/2000/svg"
-                            style={{ marginRight: 6 }}
-                        >
-                            <Path
-                                fill-rule="evenodd"
-                                clip-rule="evenodd"
-                                d="M3 11.5C2.99656 12.8199 3.30493 14.1219 3.9 15.3C5.33904 18.1793 8.28109 19.9988 11.5 20C12.8199 20.0034 14.1219 19.6951 15.3 19.1L21 21L19.1 15.3C19.6951 14.1219 20.0034 12.8199 20 11.5C19.9988 8.28109 18.1793 5.33904 15.3 3.9C14.1219 3.30493 12.8199 2.99656 11.5 3H11C6.68419 3.2381 3.2381 6.68419 3 11V11.5V11.5Z"
-                                // stroke="#BDBDBD"
-                                stroke="#FF6C00"
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                            />
-                        </Svg>
+                        <SvgXml xml={iconComments} style={{ marginRight: 6 }} />
                         <Text>3</Text>
                     </Pressable>
                     <View
@@ -68,34 +51,7 @@ const PostsScreen = () => {
                             ...styles.statsItem,
                         }}
                     >
-                        <Svg
-                            style={{
-                                ...styles.marker,
-                                marginRight: 6,
-                            }}
-                            width="24"
-                            height="24"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            xmlns="http://www.w3.org/2000/svg"
-                        >
-                            <Path
-                                fill-rule="evenodd"
-                                clip-rule="evenodd"
-                                d="M20 10.3636C20 16.0909 12 21 12 21C12 21 4 16.0909 4 10.3636C4 6.29681 7.58172 3 12 3C16.4183 3 20 6.29681 20 10.3636V10.3636Z"
-                                stroke="#BDBDBD"
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                            />
-                            <Path
-                                fill-rule="evenodd"
-                                clip-rule="evenodd"
-                                d="M12 14C13.6569 14 15 12.6569 15 11C15 9.34315 13.6569 8 12 8C10.3431 8 9 9.34315 9 11C9 12.6569 10.3431 14 12 14Z"
-                                stroke="#BDBDBD"
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                            />
-                        </Svg>
+                        <SvgXml xml={iconMarker} style={{ marginRight: 4 }} />
                         <Text
                             style={{
                                 textDecorationLine: "underline",
@@ -117,23 +73,7 @@ const PostsScreen = () => {
                             ...styles.statsItem,
                         }}
                     >
-                        <Svg
-                            width="24"
-                            height="24"
-                            viewBox="0 0 24 24"
-                            fill="#FF6C00"
-                            xmlns="http://www.w3.org/2000/svg"
-                            style={{ marginRight: 6 }}
-                        >
-                            <Path
-                                fill-rule="evenodd"
-                                clip-rule="evenodd"
-                                d="M3 11.5C2.99656 12.8199 3.30493 14.1219 3.9 15.3C5.33904 18.1793 8.28109 19.9988 11.5 20C12.8199 20.0034 14.1219 19.6951 15.3 19.1L21 21L19.1 15.3C19.6951 14.1219 20.0034 12.8199 20 11.5C19.9988 8.28109 18.1793 5.33904 15.3 3.9C14.1219 3.30493 12.8199 2.99656 11.5 3H11C6.68419 3.2381 3.2381 6.68419 3 11V11.5V11.5Z"
-                                stroke="#FF6C00"
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                            />
-                        </Svg>
+                        <SvgXml xml={iconComments} style={{ marginRight: 6 }} />
                         <Text>8</Text>
                     </Pressable>
                     <View
@@ -142,34 +82,7 @@ const PostsScreen = () => {
                             ...styles.statsItem,
                         }}
                     >
-                        <Svg
-                            style={{
-                                ...styles.marker,
-                                marginRight: 6,
-                            }}
-                            width="24"
-                            height="24"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            xmlns="http://www.w3.org/2000/svg"
-                        >
-                            <Path
-                                fill-rule="evenodd"
-                                clip-rule="evenodd"
-                                d="M20 10.3636C20 16.0909 12 21 12 21C12 21 4 16.0909 4 10.3636C4 6.29681 7.58172 3 12 3C16.4183 3 20 6.29681 20 10.3636V10.3636Z"
-                                stroke="#BDBDBD"
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                            />
-                            <Path
-                                fill-rule="evenodd"
-                                clip-rule="evenodd"
-                                d="M12 14C13.6569 14 15 12.6569 15 11C15 9.34315 13.6569 8 12 8C10.3431 8 9 9.34315 9 11C9 12.6569 10.3431 14 12 14Z"
-                                stroke="#BDBDBD"
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                            />
-                        </Svg>
+                        <SvgXml xml={iconMarker} style={{ marginRight: 4 }} />
                         <Text
                             style={{
                                 textDecorationLine: "underline",
@@ -193,23 +106,7 @@ const PostsScreen = () => {
                             ...styles.statsItem,
                         }}
                     >
-                        <Svg
-                            width="24"
-                            height="24"
-                            viewBox="0 0 24 24"
-                            fill="#FF6C00"
-                            xmlns="http://www.w3.org/2000/svg"
-                            style={{ marginRight: 6 }}
-                        >
-                            <Path
-                                fill-rule="evenodd"
-                                clip-rule="evenodd"
-                                d="M3 11.5C2.99656 12.8199 3.30493 14.1219 3.9 15.3C5.33904 18.1793 8.28109 19.9988 11.5 20C12.8199 20.0034 14.1219 19.6951 15.3 19.1L21 21L19.1 15.3C19.6951 14.1219 20.0034 12.8199 20 11.5C19.9988 8.28109 18.1793 5.33904 15.3 3.9C14.1219 3.30493 12.8199 2.99656 11.5 3H11C6.68419 3.2381 3.2381 6.68419 3 11V11.5V11.5Z"
-                                stroke="#FF6C00"
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                            />
-                        </Svg>
+                        <SvgXml xml={iconComments} style={{ marginRight: 6 }} />
                         <Text>50</Text>
                     </Pressable>
                     <View
@@ -218,34 +115,7 @@ const PostsScreen = () => {
                             ...styles.statsItem,
                         }}
                     >
-                        <Svg
-                            style={{
-                                ...styles.marker,
-                                marginRight: 6,
-                            }}
-                            width="24"
-                            height="24"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            xmlns="http://www.w3.org/2000/svg"
-                        >
-                            <Path
-                                fill-rule="evenodd"
-                                clip-rule="evenodd"
-                                d="M20 10.3636C20 16.0909 12 21 12 21C12 21 4 16.0909 4 10.3636C4 6.29681 7.58172 3 12 3C16.4183 3 20 6.29681 20 10.3636V10.3636Z"
-                                stroke="#BDBDBD"
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                            />
-                            <Path
-                                fill-rule="evenodd"
-                                clip-rule="evenodd"
-                                d="M12 14C13.6569 14 15 12.6569 15 11C15 9.34315 13.6569 8 12 8C10.3431 8 9 9.34315 9 11C9 12.6569 10.3431 14 12 14Z"
-                                stroke="#BDBDBD"
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                            />
-                        </Svg>
+                        <SvgXml xml={iconMarker} style={{ marginRight: 4 }} />
                         <Text
                             style={{
                                 textDecorationLine: "underline",
