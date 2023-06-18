@@ -9,13 +9,13 @@ import {
     ScrollView,
 } from "react-native";
 import { SvgXml } from "react-native-svg";
-import post_01 from "../../assets/img/post-photo-01.jpg";
-import post_02 from "../../assets/img/post-photo-02.jpg";
-import post_03 from "../../assets/img/post-photo-03.jpg";
 import { iconComments, iconMarker } from "../../assets/img/icons";
+import { data } from "../data";
 
 const PostsScreen = () => {
     const navigation = useNavigation();
+    const iconCommentsFalse = iconComments("none", "#BDBDBD");
+    const iconCommentsTrue = iconComments("#FF6C00", "#FF6C00");
 
     return (
         <ScrollView style={styles.main}>
@@ -31,101 +31,74 @@ const PostsScreen = () => {
                     </View>
                 </View>
             </View>
-            <View style={styles.postWrapper}>
-                <Image source={post_01} style={styles.image} />
-                <Text style={styles.imageTitle}>Ліс</Text>
-                <View style={styles.stats}>
-                    <Pressable
-                        onPress={() => navigation.navigate("Comments")}
-                        style={{
-                            marginRight: 24,
-                            ...styles.statsItem,
-                        }}
-                    >
-                        <SvgXml xml={iconComments} style={{ marginRight: 6 }} />
-                        <Text>3</Text>
-                    </Pressable>
-                    <View
-                        style={{
-                            marginLeft: "auto",
-                            ...styles.statsItem,
-                        }}
-                    >
-                        <SvgXml xml={iconMarker} style={{ marginRight: 4 }} />
-                        <Text
-                            style={{
-                                textDecorationLine: "underline",
-                            }}
-                        >
-                            Ivano-Frankivs'k Region, Ukraine
-                        </Text>
-                    </View>
-                </View>
-            </View>
-            <View style={styles.postWrapper}>
-                <Image source={post_02} style={styles.image} />
-                <Text style={styles.imageTitle}>Захід на Чорному морі</Text>
-                <View style={styles.stats}>
-                    <Pressable
-                        onPress={() => navigation.navigate("Comments")}
-                        style={{
-                            marginRight: 24,
-                            ...styles.statsItem,
-                        }}
-                    >
-                        <SvgXml xml={iconComments} style={{ marginRight: 6 }} />
-                        <Text>8</Text>
-                    </Pressable>
-                    <View
-                        style={{
-                            marginLeft: "auto",
-                            ...styles.statsItem,
-                        }}
-                    >
-                        <SvgXml xml={iconMarker} style={{ marginRight: 4 }} />
-                        <Text
-                            style={{
-                                textDecorationLine: "underline",
-                            }}
-                        >
-                            Kherson region, Ukraine
-                        </Text>
-                    </View>
-                </View>
-            </View>
-            <View style={styles.postWrapper}>
-                <Image source={post_03} style={styles.image} />
-                <Text style={styles.imageTitle}>
-                    Старий будиночок у Венеції
-                </Text>
-                <View style={styles.stats}>
-                    <Pressable
-                        onPress={() => navigation.navigate("Comments")}
-                        style={{
-                            marginRight: 24,
-                            ...styles.statsItem,
-                        }}
-                    >
-                        <SvgXml xml={iconComments} style={{ marginRight: 6 }} />
-                        <Text>50</Text>
-                    </Pressable>
-                    <View
-                        style={{
-                            marginLeft: "auto",
-                            ...styles.statsItem,
-                        }}
-                    >
-                        <SvgXml xml={iconMarker} style={{ marginRight: 4 }} />
-                        <Text
-                            style={{
-                                textDecorationLine: "underline",
-                            }}
-                        >
-                            Venice, Italy
-                        </Text>
-                    </View>
-                </View>
-            </View>
+            {data.map(
+                ({
+                    id,
+                    image,
+                    title,
+                    comments,
+                    region,
+                    location,
+                    latitude,
+                    longitude,
+                }) => {
+                    return (
+                        <View key={id} style={styles.postWrapper}>
+                            <Image source={image} style={styles.image} />
+                            <Text style={styles.imageTitle}>{title}</Text>
+                            <View style={styles.stats}>
+                                <Pressable
+                                    onPress={() =>
+                                        navigation.navigate("Comments")
+                                    }
+                                    style={{
+                                        marginRight: 24,
+                                        ...styles.statsItem,
+                                    }}
+                                >
+                                    <SvgXml
+                                        xml={
+                                            comments > 0
+                                                ? iconCommentsTrue
+                                                : iconCommentsFalse
+                                        }
+                                        style={{ marginRight: 6 }}
+                                    />
+                                    <Text>{comments}</Text>
+                                </Pressable>
+                                <View
+                                    style={{
+                                        marginLeft: "auto",
+                                        ...styles.statsItem,
+                                    }}
+                                >
+                                    <Pressable
+                                        onPress={() =>
+                                            navigation.navigate(
+                                                "Map",
+                                                (locationValue = {
+                                                    latitude,
+                                                    longitude,
+                                                })
+                                            )
+                                        }
+                                        style={{ marginRight: 4 }}
+                                    >
+                                        <SvgXml xml={iconMarker} />
+                                    </Pressable>
+                                    <Text
+                                        style={{
+                                            textDecorationLine: "underline",
+                                        }}
+                                    >
+                                        {`${region}, ${location}`}
+                                    </Text>
+                                </View>
+                            </View>
+                        </View>
+                    );
+                }
+            )}
         </ScrollView>
     );
 };

@@ -21,6 +21,7 @@ const SignUpScreen = () => {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [showPassword, setShowPassword] = useState(true);
+    const iconAddAvatar = iconAdd("white", "#FF6C00", "#FF6C00");
 
     const navigation = useNavigation();
 
@@ -49,7 +50,7 @@ const SignUpScreen = () => {
                     <View style={styles.wrapper}>
                         <View style={styles.photoWrapper}>
                             <Pressable style={styles.btnAddImage}>
-                                <SvgXml xml={iconAdd} />
+                                <SvgXml xml={iconAddAvatar} />
                             </Pressable>
                         </View>
                         <View style={styles.form}>

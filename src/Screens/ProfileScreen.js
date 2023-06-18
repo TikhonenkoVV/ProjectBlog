@@ -10,9 +10,6 @@ import {
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 import { Background } from "../Components/Background";
 import { SvgXml } from "react-native-svg";
-import post_01 from "../../assets/img/post-photo-01.jpg";
-import post_02 from "../../assets/img/post-photo-02.jpg";
-import post_03 from "../../assets/img/post-photo-03.jpg";
 import avatar from "../../assets/img/avatar_large.jpg";
 import { useNavigation } from "@react-navigation/native";
 import { BtnLogout } from "../Components/BtnLogout";
@@ -22,12 +19,19 @@ import {
     iconLikes,
     iconMarker,
 } from "../../assets/img/icons";
+import { data } from "../data";
 
 const windowHeight = Dimensions.get("window").height;
 
 export const ProfileScreen = () => {
     const barHeight = useBottomTabBarHeight();
     const navigation = useNavigation();
+    const iconAddAvatar = iconAdd("white", "#E8E8E8", "#BDBDBD");
+    const iconCommentsFalse = iconComments("none", "#BDBDBD");
+    const iconCommentsTrue = iconComments("#FF6C00", "#FF6C00");
+    const iconLikesFalse = iconLikes("#BDBDBD");
+    const iconLikesTrue = iconLikes("#FF6C00");
+
     return (
         <Background>
             <ScrollView style={styles.scrollView}>
@@ -46,7 +50,10 @@ export const ProfileScreen = () => {
                         />
                         <View style={styles.photoWrapper}>
                             <Pressable style={styles.btnAddImage}>
-                                <SvgXml xml={iconAdd} />
+                                <SvgXml
+                                    xml={iconAddAvatar}
+                                    style={{ transform: [{ rotate: "45deg" }] }}
+                                />
                             </Pressable>
                             <Image
                                 style={{ borderRadius: 16 }}
@@ -54,163 +61,100 @@ export const ProfileScreen = () => {
                             />
                         </View>
                         <Text style={styles.title}>Natali Romanova </Text>
-                        <View style={styles.postWrapper}>
-                            <Image source={post_01} style={styles.image} />
-                            <Text style={styles.imageTitle}>Ліс</Text>
-                            <View style={styles.stats}>
-                                <Pressable
-                                    onPress={() =>
-                                        navigation.navigate("Comments")
-                                    }
-                                    style={{
-                                        marginRight: 24,
-                                        ...styles.statsItem,
-                                    }}
-                                >
-                                    <SvgXml
-                                        xml={iconComments}
-                                        style={{ marginRight: 6 }}
-                                    />
-                                    <Text>3</Text>
-                                </Pressable>
-                                <View
-                                    style={{
-                                        marginRight: 24,
-                                        ...styles.statsItem,
-                                    }}
-                                >
-                                    <SvgXml
-                                        xml={iconLikes}
-                                        style={{ marginRight: 6 }}
-                                    />
-                                    <Text>0</Text>
-                                </View>
-                                <View
-                                    style={{
-                                        marginLeft: "auto",
-                                        ...styles.statsItem,
-                                    }}
-                                >
-                                    <SvgXml
-                                        xml={iconMarker}
-                                        style={{ marginRight: 6 }}
-                                    />
-                                    <Text
-                                        style={{
-                                            textDecorationLine: "underline",
-                                        }}
-                                    >
-                                        Ukraine
-                                    </Text>
-                                </View>
-                            </View>
-                        </View>
-                        <View style={styles.postWrapper}>
-                            <Image source={post_02} style={styles.image} />
-                            <Text style={styles.imageTitle}>
-                                Захід на Чорному морі
-                            </Text>
-                            <View style={styles.stats}>
-                                <Pressable
-                                    onPress={() =>
-                                        navigation.navigate("Comments")
-                                    }
-                                    style={{
-                                        marginRight: 24,
-                                        ...styles.statsItem,
-                                    }}
-                                >
-                                    <SvgXml
-                                        xml={iconComments}
-                                        style={{ marginRight: 6 }}
-                                    />
-                                    <Text>8</Text>
-                                </Pressable>
-                                <View
-                                    style={{
-                                        marginRight: 24,
-                                        ...styles.statsItem,
-                                    }}
-                                >
-                                    <SvgXml
-                                        xml={iconLikes}
-                                        style={{ marginRight: 6 }}
-                                    />
-                                    <Text>153</Text>
-                                </View>
-                                <View
-                                    style={{
-                                        marginLeft: "auto",
-                                        ...styles.statsItem,
-                                    }}
-                                >
-                                    <SvgXml
-                                        xml={iconMarker}
-                                        style={{ marginRight: 6 }}
-                                    />
-                                    <Text
-                                        style={{
-                                            textDecorationLine: "underline",
-                                        }}
-                                    >
-                                        Ukraine
-                                    </Text>
-                                </View>
-                            </View>
-                        </View>
-                        <View style={styles.postWrapper}>
-                            <Image source={post_03} style={styles.image} />
-                            <Text style={styles.imageTitle}>
-                                Старий будиночок у Венеції
-                            </Text>
-                            <View style={styles.stats}>
-                                <Pressable
-                                    onPress={() =>
-                                        navigation.navigate("Comments")
-                                    }
-                                    style={{
-                                        marginRight: 24,
-                                        ...styles.statsItem,
-                                    }}
-                                >
-                                    <SvgXml
-                                        xml={iconComments}
-                                        style={{ marginRight: 6 }}
-                                    />
-                                    <Text>50</Text>
-                                </Pressable>
-                                <View
-                                    style={{
-                                        marginRight: 24,
-                                        ...styles.statsItem,
-                                    }}
-                                >
-                                    <SvgXml
-                                        xml={iconLikes}
-                                        style={{ marginRight: 6 }}
-                                    />
-                                    <Text>200</Text>
-                                </View>
-                                <View
-                                    style={{
-                                        marginLeft: "auto",
-                                        ...styles.statsItem,
-                                    }}
-                                >
-                                    <SvgXml
-                                        xml={iconMarker}
-                                        style={{ marginRight: 6 }}
-                                    />
-                                    <Text
-                                        style={{
-                                            textDecorationLine: "underline",
-                                        }}
-                                    >
-                                        Italy
-                                    </Text>
-                                </View>
-                            </View>
-                        </View>
+                        {data.map(
+                            ({
+                                id,
+                                image,
+                                title,
+                                comments,
+                                likes,
+                                location,
+                                latitude,
+                                longitude,
+                            }) => {
+                                return (
+                                    <View key={id} style={styles.postWrapper}>
+                                        <Image
+                                            source={image}
+                                            style={styles.image}
+                                        />
+                                        <Text style={styles.imageTitle}>
+                                            {title}
+                                        </Text>
+                                        <View style={styles.stats}>
+                                            <Pressable
+                                                onPress={() =>
+                                                    navigation.navigate(
+                                                        "Comments"
+                                                    )
+                                                }
+                                                style={{
+                                                    marginRight: 24,
+                                                    ...styles.statsItem,
+                                                }}
+                                            >
+                                                <SvgXml
+                                                    xml={
+                                                        comments > 0
+                                                            ? iconCommentsTrue
+                                                            : iconCommentsFalse
+                                                    }
+                                                    style={{ marginRight: 6 }}
+                                                />
+                                                <Text>{comments}</Text>
+                                            </Pressable>
+                                            <View
+                                                style={{
+                                                    marginRight: 24,
+                                                    ...styles.statsItem,
+                                                }}
+                                            >
+                                                <SvgXml
+                                                    xml={
+                                                        likes > 0
+                                                            ? iconLikesTrue
+                                                            : iconLikesFalse
+                                                    }
+                                                    style={{ marginRight: 6 }}
+                                                />
+                                                <Text>{likes}</Text>
+                                            </View>
+                                            <View
+                                                style={{
+                                                    marginLeft: "auto",
+                                                    ...styles.statsItem,
+                                                }}
+                                            >
+                                                <Pressable
+                                                    onPress={() =>
+                                                        navigation.navigate(
+                                                            "Map",
+                                                            (locationValue = {
+                                                                latitude,
+                                                                longitude,
+                                                            })
+                                                        )
+                                                    }
+                                                    style={{
+                                                        marginRight: 6,
+                                                    }}
+                                                >
+                                                    <SvgXml xml={iconMarker} />
+                                                </Pressable>
+                                                <Text
+                                                    style={{
+                                                        textDecorationLine:
+                                                            "underline",
+                                                    }}
+                                                >
+                                                    {location}
+                                                </Text>
+                                            </View>
+                                        </View>
+                                    </View>
+                                );
+                            }
+                        )}
                     </View>
                 </View>
             </ScrollView>

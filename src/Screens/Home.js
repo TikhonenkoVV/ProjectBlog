@@ -15,6 +15,8 @@ const Home = () => {
 
     const navigation = useNavigation();
 
+    const iconAddPost = iconAdd("none", "none", "#fff");
+
     const defaultOptions = {
         headerTitleAlign: "center",
         headerStyle: {
@@ -51,7 +53,7 @@ const Home = () => {
                                 </TouchableOpacity>
                                 <TouchableOpacity onPress={goCreatePost}>
                                     <View style={styles.btnCreatePublication}>
-                                        <SvgXml xml={iconAdd} />
+                                        <SvgXml xml={iconAddPost} />
                                     </View>
                                 </TouchableOpacity>
                                 <TouchableOpacity onPress={goProfile}>
