@@ -201,7 +201,7 @@ export const iconCamera = `<svg
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
     >
-        <circle cx="30" cy="30" r="30" fill="white" />
+        <circle cx="30" cy="30" r="30" fill="white" opacity="0.5" />
         <g clip-path="url(#clip0_32_29)">
             <path
                 d="M29.9998 33.2C31.7671 33.2 33.1998 31.7673 33.1998 30C33.1998 28.2327 31.7671 26.8 29.9998 26.8C28.2325 26.8 26.7998 28.2327 26.7998 30C26.7998 31.7673 28.2325 33.2 29.9998 33.2Z"
@@ -256,8 +256,8 @@ export const iconRecicle = `<svg
         </svg>`;
 
 export const iconCameraExit = `<svg
-        width="60"
-        height="60"
+        width="40"
+        height="40"
         viewBox="0 0 32 32"
         xmlns="http://www.w3.org/2000/svg"
     >
@@ -301,8 +301,8 @@ export const iconCameraSnap = `    <svg
 
 export const iconCameraFlip = `
         <svg
-            width="60"
-            height="60"
+            width="40"
+            height="40"
             viewBox="0 0 32 32"
             xmlns="http://www.w3.org/2000/svg"
         >

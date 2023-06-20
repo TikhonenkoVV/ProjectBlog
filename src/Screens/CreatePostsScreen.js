@@ -1,4 +1,5 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState } from "react";
+import * as Location from "expo-location";
 import {
     StyleSheet,
     Pressable,
@@ -27,15 +28,24 @@ import { TouchableOpacity } from "react-native";
 import { Dimensions } from "react-native";
 import { StatusBar } from "react-native";
 import { useNavigation } from "@react-navigation/native";
+import { ScrollView } from "react-native";
+import { useHeaderHeight } from "@react-navigation/elements";
+
+const layoutHeight = Dimensions.get("window").height;
 
 export const CreatePostsScreen = () => {
+    const [location, setLocation] = useState(null);
     const [hasPermission, setHasPermission] = useState(null);
     const [cameraRef, setCameraRef] = useState(null);
     const [type, setType] = useState(Camera.Constants.Type.back);
-    const [showCamera, setShowCamera] = useState(true);
+    const [showCamera, setShowCamera] = useState(false);
     const [photo, setPhoto] = useState(null);
+    const [postName, setPostName] = useState("");
+    const [allowSubmit, setAllowSubmit] = useState(false);
 
     const navigation = useNavigation();
+
+    const headerHeight = useHeaderHeight();
 
     useEffect(() => {
         (async () => {
@@ -44,6 +54,32 @@ export const CreatePostsScreen = () => {
             setHasPermission(status === "granted");
         })();
     }, []);
+
+    useEffect(() => {
+        if (photo)
+            (async () => {
+                const { status } =
+                    await Location.requestForegroundPermissionsAsync();
+                if (status !== "granted") {
+                    console.log("Permission to access location was denied");
+                    return;
+                }
+                const currentPosition = await Location.getCurrentPositionAsync(
+                    {}
+                );
+                const geoCode = await Location.reverseGeocodeAsync(
+                    currentPosition.coords
+                );
+                const region = geoCode[0]["region"];
+                const country = geoCode[0]["country"];
+                setLocation(`${region}, ${country}`);
+            })();
+    }, [photo]);
+
+    useEffect(() => {
+        if (photo && location && postName.length > 3) setAllowSubmit(true);
+        else setAllowSubmit(false);
+    }, [photo, location, postName]);
 
     if (hasPermission === null) {
         return <View />;
@@ -55,17 +91,24 @@ export const CreatePostsScreen = () => {
     const takePhoto = async () => {
         if (cameraRef) {
             const { uri } = await cameraRef.takePictureAsync();
+            setShowCamera(false);
             await MediaLibrary.createAssetAsync(uri);
             setPhoto(uri);
-            setShowCamera(false);
         }
     };
 
-    const onPublic = () => {};
+    const onPublic = () => {
+        navigation.navigate("Posts");
+    };
 
     return (
         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-            <View style={styles.container}>
+            <View
+                style={{
+                    ...styles.container,
+                    height: layoutHeight - headerHeight,
+                }}
+            >
                 {showCamera && (
                     <View style={styles.cameraContainer}>
                         <Camera
@@ -75,6 +118,7 @@ export const CreatePostsScreen = () => {
                         ></Camera>
                         <View style={styles.btnWrapper}>
                             <TouchableOpacity
+                                style={{ padding: 10 }}
                                 onPress={() => {
                                     setShowCamera(false);
                                 }}
@@ -88,6 +132,7 @@ export const CreatePostsScreen = () => {
                                 <SvgXml xml={iconCameraSnap} />
                             </TouchableOpacity>
                             <TouchableOpacity
+                                style={{ padding: 10 }}
                                 onPress={() => {
                                     setType(
                                         type === Camera.Constants.Type.back
@@ -101,37 +146,52 @@ export const CreatePostsScreen = () => {
                         </View>
                     </View>
                 )}
-                <View style={styles.imageWrapper}>
-                    <TouchableOpacity
-                        onPress={() => setShowCamera(true)}
-                        style={styles.btnCamera}
-                    >
-                        <SvgXml xml={iconCamera} />
-                    </TouchableOpacity>
-                    <Image source={{ uri: photo }} style={styles.image} />
-                </View>
-                <Text style={styles.imageTitle}>Завантажте фото</Text>
                 <KeyboardAvoidingView
+                    keyboardVerticalOffset={headerHeight}
                     behavior={Platform.OS === "ios" ? "padding" : "height"}
+                    style={{ marginBottom: "auto" }}
                 >
-                    <TextInput style={styles.input} placeholder="Назва..." />
-                </KeyboardAvoidingView>
-                <View style={styles.geoInputWrapper}>
-                    <SvgXml xml={iconMarker} style={styles.marker} />
-                    <KeyboardAvoidingView
-                        behavior={Platform.OS === "ios" ? "padding" : "height"}
-                    >
+                    <ScrollView>
+                        <View style={styles.imageWrapper}>
+                            <TouchableOpacity
+                                onPress={() => setShowCamera(true)}
+                                style={styles.btnCamera}
+                            >
+                                <SvgXml xml={iconCamera} />
+                            </TouchableOpacity>
+                            <Image
+                                source={{ uri: photo }}
+                                style={styles.image}
+                            />
+                        </View>
+                        <Text style={styles.imageTitle}>Завантажте фото</Text>
                         <TextInput
-                            style={styles.geoInput}
-                            placeholder="Місцевість..."
+                            style={styles.input}
+                            value={postName}
+                            onChangeText={setPostName}
+                            placeholder="Назва..."
                         />
-                    </KeyboardAvoidingView>
-                </View>
-                <BtnStyled onPress={onPublic} title="Опублікувати" />
+                        <View style={styles.geoInputWrapper}>
+                            <SvgXml xml={iconMarker} style={styles.marker} />
+                            <TextInput
+                                style={styles.geoInput}
+                                value={location}
+                                onChangeText={setLocation}
+                                placeholder="Місцевість..."
+                            />
+                        </View>
+                        <BtnStyled
+                            onPress={onPublic}
+                            bgColor={allowSubmit ? "#FF6C00" : "#F6F6F6"}
+                            textColor={allowSubmit ? "#fff" : "#BDBDBD"}
+                            title="Опублікувати"
+                        />
+                    </ScrollView>
+                </KeyboardAvoidingView>
                 <View style={styles.footer}>
                     <Pressable
                         style={styles.btnDeletePublication}
-                        onPress={() => navigation.navigate("Posts")}
+                        onPress={() => {}}
                     >
                         <SvgXml xml={iconRecicle} />
                     </Pressable>
@@ -144,9 +204,8 @@ export const CreatePostsScreen = () => {
 const styles = StyleSheet.create({
     container: {
         position: "relative",
-        flex: 1,
-        flexGrow: 1,
         paddingTop: 32,
+        paddingBottom: 1,
         paddingHorizontal: 16,
         backgroundColor: "#fff",
     },
@@ -176,18 +235,24 @@ const styles = StyleSheet.create({
         padding: 16,
         justifyContent: "space-between",
         width: Dimensions.get("window").width,
+        backgroundColor: "#000",
+        opacity: 0.4,
     },
     imageWrapper: {
         position: "relative",
+        width: "100%",
         marginBottom: 8,
         backgroundColor: "#F6F6F6",
         borderWidth: 1,
         borderColor: "#E8E8E8",
         borderRadius: 8,
+        height: 240,
     },
     image: {
+        flex: 1,
         width: "100%",
-        height: 240,
+        height: "100%",
+        resizeMode: "contain",
     },
     btnCamera: {
         position: "absolute",
@@ -226,11 +291,8 @@ const styles = StyleSheet.create({
         borderColor: "#E8E8E8",
     },
     footer: {
-        position: "absolute",
-        bottom: 0,
-        left: 0,
         alignItems: "center",
-        width: Dimensions.get("window").width,
+        width: "100%",
         height: 58,
         paddingVertical: 9,
         backgroundColor: "#fff",

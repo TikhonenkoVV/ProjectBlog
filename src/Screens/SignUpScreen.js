@@ -96,6 +96,8 @@ const SignUpScreen = () => {
                             </KeyboardAvoidingView>
                             <BtnStyled
                                 onPress={signUp}
+                                bgColor="#FF6C00"
+                                textColor="#fff"
                                 title="Зареєстуватися"
                             />
                             <Pressable

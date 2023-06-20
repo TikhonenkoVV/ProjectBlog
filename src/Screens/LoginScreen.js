@@ -78,7 +78,12 @@ const LoginScreen = () => {
                                     </View>
                                 </View>
                             </KeyboardAvoidingView>
-                            <BtnStyled onPress={signIn} title="Увійти" />
+                            <BtnStyled
+                                onPress={signIn}
+                                bgColor="#FF6C00"
+                                textColor="#fff"
+                                title="Увійти"
+                            />
                             <Pressable
                                 style={styles.btnSignUp}
                                 onPress={() =>

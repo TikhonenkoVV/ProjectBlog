@@ -1,10 +1,18 @@
 import { Text, Pressable } from "react-native";
 import { StyleSheet } from "react-native";
 
-export const BtnStyled = ({ onPress, title }) => {
+export const BtnStyled = ({ bgColor, textColor, onPress, title }) => {
     return (
-        <Pressable style={styles.btnStyle} onPress={onPress}>
-            <Text style={styles.btnTitle}>{title}</Text>
+        <Pressable
+            style={{
+                ...styles.btnStyle,
+                backgroundColor: bgColor,
+            }}
+            onPress={onPress}
+        >
+            <Text style={{ ...styles.btnTitle, color: textColor }}>
+                {title}
+            </Text>
         </Pressable>
     );
 };
@@ -22,6 +30,5 @@ const styles = StyleSheet.create({
     btnTitle: {
         fontFamily: "Roboto",
         fontSize: 16,
-        color: "#fff",
     },
 });
