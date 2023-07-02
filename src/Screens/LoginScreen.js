@@ -13,29 +13,49 @@ import { useState } from "react";
 import { useNavigation } from "@react-navigation/native";
 import { Background } from "../Components/Background";
 import { BtnStyled } from "../Components/BtnStyled";
+import { useDispatch, useSelector } from "react-redux";
+import { signInOperation } from "../redux/auth/operations";
+import { Alert } from "react-native";
+import { REQIRED_FIELD, UNAUTHORISED } from "../services/constants";
+import { selectError, selectIsLoggedIn } from "../redux/selectors";
+import { useEffect } from "react";
 
 const LoginScreen = () => {
-    const [userName, setUserName] = useState("");
-    const [password, setPassword] = useState("");
+    const [userEmail, setUserEmail] = useState("");
+    const [userPassword, setUserPassword] = useState("");
     const [showPassword, setShowPassword] = useState(true);
 
+    const isLogged = useSelector(selectIsLoggedIn);
+    const authError = useSelector(selectError);
+
+    useEffect(() => {
+        if (authError) Alert.alert(UNAUTHORISED);
+        if (isLogged) navigation.navigate("Home");
+    }, [isLogged, authError]);
+
     const navigation = useNavigation();
+
+    const dispatch = useDispatch();
 
     const onPressShowPassword = () => {
         const passState = showPassword;
         setShowPassword(!passState);
     };
 
-    const signIn = () => {
-        const userData = {
-            userName,
-            password,
-        };
-        console.debug(userData);
-        setUserName("");
-        setPassword("");
+    const onSignIn = () => {
+        if (userEmail === "" || userPassword === "") {
+            Alert.alert(REQIRED_FIELD);
+            return;
+        }
+        dispatch(
+            signInOperation({
+                userEmail,
+                userPassword,
+            })
+        );
+        setUserEmail("");
+        setUserPassword("");
         setShowPassword(true);
-        navigation.navigate("Home");
     };
 
     return (
@@ -54,16 +74,16 @@ const LoginScreen = () => {
                                     <TextInput
                                         style={styles.input}
                                         placeholder="Адреса електронної пошти"
-                                        value={userName}
-                                        onChangeText={setUserName}
+                                        value={userEmail}
+                                        onChangeText={setUserEmail}
                                     />
                                     <View style={styles.passInputWrapper}>
                                         <TextInput
                                             style={styles.input}
                                             placeholder="Пароль"
                                             secureTextEntry={showPassword}
-                                            value={password}
-                                            onChangeText={setPassword}
+                                            value={userPassword}
+                                            onChangeText={setUserPassword}
                                         />
                                         <Pressable
                                             style={styles.btnShowPass}
@@ -79,7 +99,7 @@ const LoginScreen = () => {
                                 </View>
                             </KeyboardAvoidingView>
                             <BtnStyled
-                                onPress={signIn}
+                                onPress={onSignIn}
                                 bgColor="#FF6C00"
                                 textColor="#fff"
                                 title="Увійти"

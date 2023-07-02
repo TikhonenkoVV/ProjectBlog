@@ -3,12 +3,21 @@ import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import PostsScreen from "./PostsScreen";
 import { ProfileScreen } from "./ProfileScreen";
 import { View } from "react-native";
-import { BtnLogout } from "../Components/BtnLogout";
 import { SvgXml } from "react-native-svg";
 import { StyleSheet } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { TouchableOpacity } from "react-native-gesture-handler";
-import { iconGrid, iconAdd, iconUser } from "../../assets/img/icons";
+import {
+    iconGrid,
+    iconAdd,
+    iconUser,
+    iconLogOut,
+} from "../../assets/img/icons";
+import { useDispatch, useSelector } from "react-redux";
+import { signOutOperation } from "../redux/auth/operations";
+import { Pressable } from "react-native";
+import { selectIsLoggedIn } from "../redux/selectors";
+import { useEffect } from "react";
 
 const Home = () => {
     const FooterTabs = createBottomTabNavigator();
@@ -30,9 +39,21 @@ const Home = () => {
         },
     };
 
+    const dispatch = useDispatch();
     const goHome = () => navigation.navigate("Posts");
     const goCreatePost = () => navigation.navigate("CreatePost");
     const goProfile = () => navigation.navigate("Profile");
+
+    const isLogged = useSelector(selectIsLoggedIn);
+
+    useEffect(() => {
+        if (!isLogged) navigation.navigate("Login");
+    }, []);
+
+    const onSignOut = () => {
+        dispatch(signOutOperation());
+        navigation.navigate("Login");
+    };
 
     return (
         <FooterTabs.Navigator
@@ -73,9 +94,17 @@ const Home = () => {
                     ...defaultOptions,
                     headerLeft: false,
                     headerRight: () => (
-                        <BtnLogout
-                            onPress={() => navigation.navigate("Login")}
-                        />
+                        <Pressable
+                            style={{
+                                position: "absolute",
+                                top: 10,
+                                right: 16,
+                                paddingRight: 16,
+                            }}
+                            onPress={onSignOut}
+                        >
+                            <SvgXml xml={iconLogOut} />
+                        </Pressable>
                     ),
                 }}
             />

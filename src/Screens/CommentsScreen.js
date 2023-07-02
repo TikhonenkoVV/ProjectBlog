@@ -1,101 +1,207 @@
-import { StyleSheet } from "react-native";
-import { ScrollView, View, Text, Pressable, Image } from "react-native";
-import { Path, Svg } from "react-native-svg";
-import post_01 from "../../assets/img/post-photo-01.jpg";
-import { Dimensions } from "react-native";
-import user_01 from "../../assets/img/natali_romanova.jpg";
-import user_02 from "../../assets/img/user_02_avatar_small.jpg";
+import {
+    View,
+    Image,
+    StyleSheet,
+    Dimensions,
+    TextInput,
+    Text,
+    Pressable,
+    Alert,
+    KeyboardAvoidingView,
+    Platform,
+    TouchableWithoutFeedback,
+    Keyboard,
+} from "react-native";
+import { useRoute } from "@react-navigation/native";
+import {
+    addDoc,
+    collection,
+    doc,
+    getDoc,
+    onSnapshot,
+    updateDoc,
+} from "firebase/firestore";
+import { db } from "../../firebase-config";
+import { useEffect, useState, useRef } from "react";
+import { FlatList } from "react-native-gesture-handler";
+import { useHeaderHeight } from "@react-navigation/elements";
+import { SvgXml } from "react-native-svg";
+import { iconSendComment } from "../../assets/img/icons";
+import { CommentItem } from "../Components/CommentItem";
+import { useSelector } from "react-redux";
+import { selectUserId, selectUserPhoto } from "../redux/selectors";
 
-const windowWidth = Dimensions.get("window").width;
 const windowHeight = Dimensions.get("window").height;
 
-export const CommentsScreen = () => {
+const CommentsScreen = () => {
+    const {
+        params: { postId },
+    } = useRoute();
+
+    const headerHeight = useHeaderHeight();
+
+    const commentsList = useRef();
+
+    const avatar = useSelector(selectUserPhoto);
+    const author = useSelector(selectUserId);
+
+    const [photo, setPhoto] = useState(null);
+    const [commentsCounter, setCommentsCounter] = useState(0);
+    const [commentsArray, setCommentsArray] = useState([]);
+    const [message, setMessage] = useState(null);
+
+    const getComments = () => {
+        try {
+            const postRef = doc(db, "posts", postId);
+            const snapShot = collection(postRef, "comments");
+            onSnapshot(snapShot, (comments) => {
+                const arr = [];
+                comments.forEach((comment) => arr.push(comment.data()));
+                arr.sort((a, b) => a.commentDate - b.commentDate);
+                setCommentsArray(arr);
+            });
+        } catch (error) {
+            console.log(error.message);
+        }
+    };
+
+    const addComment = async () => {
+        if (!message) {
+            return Alert.alert("Поле не може бути порожнім");
+        }
+        try {
+            const postRef = doc(db, "posts", postId);
+            const commentsRef = collection(postRef, "comments");
+            const newComment = {
+                message,
+                commentDate: Date.now(),
+                author,
+                avatar,
+                photo,
+            };
+            await addDoc(commentsRef, newComment);
+            await updateDoc(postRef, { comments: commentsCounter + 1 });
+            setMessage(null);
+            commentsList.current.scrollToEnd();
+        } catch (error) {
+            console.log(error.message);
+        }
+    };
+
+    const getPost = async () => {
+        try {
+            const post = await getDoc(doc(db, "posts", postId));
+            setPhoto(post.data().photo);
+            setCommentsCounter(post.data().comments);
+        } catch (error) {
+            return console.log(error.message);
+        }
+    };
+
+    useEffect(() => {
+        getPost();
+    }, []);
+
+    useEffect(() => {
+        getComments();
+    }, []);
+
     return (
-        <ScrollView style={styles.scrollView}>
-            <Image source={post_01} style={styles.image} />
-            <View style={styles.commentWrapper}>
-                <Image style={styles.avatar} source={user_02} />
-                <View style={styles.textWrapper}>
-                    <Text style={styles.comment}>
-                        Really love your most recent photo. I’ve been trying to
-                        capture the same thing for a few months and would love
-                        some tips!
-                    </Text>
-                    <Text style={styles.date}>09 червня, 2020 | 09:20</Text>
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+            <>
+                <View
+                    style={{
+                        ...styles.layout,
+                        height: windowHeight - headerHeight - 82,
+                    }}
+                >
+                    <FlatList
+                        ref={commentsList}
+                        style={styles.commentsList}
+                        ListHeaderComponent={
+                            <Image
+                                source={{ uri: photo }}
+                                style={styles.image}
+                            />
+                        }
+                        data={commentsArray}
+                        renderItem={({ item }) => <CommentItem item={item} />}
+                        ListEmptyComponent={
+                            <Text style={styles.text}>
+                                Комментарії відсутні
+                            </Text>
+                        }
+                    />
                 </View>
-            </View>
-            <View
-                style={{
-                    ...styles.commentWrapper,
-                    flexDirection: "row-reverse",
-                }}
-            >
-                <Image
-                    style={{ ...styles.avatar, marginRight: 0, marginLeft: 16 }}
-                    source={user_01}
-                />
-                <View style={styles.textWrapper}>
-                    <Text style={styles.comment}>
-                        A fast 50mm like f1.8 would help with the bokeh. I’ve
-                        been using primes as they tend to get a bit sharper
-                        images.
-                    </Text>
-                    <Text style={{ ...styles.date, textAlign: "right" }}>
-                        09 червня, 2020 | 09:20
-                    </Text>
+                <View style={styles.inputWrapper}>
+                    <Pressable
+                        style={styles.btnCreatePost}
+                        onPress={addComment}
+                    >
+                        <SvgXml xml={iconSendComment} />
+                    </Pressable>
+                    <KeyboardAvoidingView
+                        behavior={Platform.OS === "ios" ? "padding" : "height"}
+                    >
+                        <TextInput
+                            multiline={true}
+                            style={styles.input}
+                            placeholder="Коментувати..."
+                            value={message}
+                            onChangeText={setMessage}
+                        />
+                    </KeyboardAvoidingView>
                 </View>
-            </View>
-            <View style={styles.commentWrapper}>
-                <Image style={styles.avatar} source={user_02} />
-                <View style={styles.textWrapper}>
-                    <Text style={styles.comment}>
-                        Thank you! That was very helpful!
-                    </Text>
-                    <Text style={styles.date}>09 червня, 2020 | 09:20</Text>
-                </View>
-            </View>
-        </ScrollView>
+            </>
+        </TouchableWithoutFeedback>
     );
 };
 
 const styles = StyleSheet.create({
-    scrollView: {
-        height: windowHeight,
-        paddingTop: 32,
+    layout: {
+        flexGrow: 1,
         paddingHorizontal: 16,
         backgroundColor: "#fff",
     },
     image: {
+        flex: 1,
+        flexGrow: 1,
         width: "100%",
+        marginTop: 32,
+        minHeight: 240,
         borderRadius: 8,
         marginBottom: 32,
     },
-    commentWrapper: {
-        flexDirection: "row",
-        alignItems: "flex-start",
-        marginBottom: 24,
+    commentsList: {
+        backgroundColor: "#fff",
     },
-    avatar: {
-        width: 28,
-        height: 28,
-        marginRight: 16,
-        borderRadius: 14,
-    },
-    textWrapper: {
-        width: windowWidth - 76,
+    inputWrapper: {
+        position: "relative",
         padding: 16,
-        borderRadius: 6,
-        backgroundColor: "#F7F7F7",
+        marginTop: "auto",
+        backgroundColor: "#fff",
     },
-    comment: {
-        fontFamily: "Roboto",
-        fontSize: 13,
-        color: "#212121",
-        marginBottom: 8,
+    btnCreatePost: {
+        position: "absolute",
+        top: 24,
+        right: 24,
+        width: 34,
+        height: 34,
+        zIndex: 1,
     },
-    date: {
+    input: {
+        width: "100%",
+        height: 50,
+        backgroundColor: "#F6F6F6",
+        borderWidth: 1,
+        borderColor: "#E8E8E8",
+        borderRadius: 25,
+        paddingVertical: 16,
+        paddingLeft: 16,
+        paddingRight: 50,
         fontFamily: "Roboto",
-        fontSize: 12,
-        color: "#BDBDBD",
+        fontSize: 16,
     },
 });
+
+export default CommentsScreen;

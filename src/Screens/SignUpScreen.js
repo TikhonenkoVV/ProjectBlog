@@ -15,32 +15,62 @@ import { useNavigation } from "@react-navigation/native";
 import { Background } from "../Components/Background";
 import { BtnStyled } from "../Components/BtnStyled";
 import { iconAdd } from "../../assets/img/icons";
+import { useDispatch } from "react-redux";
+import { signUpOperation } from "../redux/auth/operations";
+import { Image } from "react-native";
+import * as ImagePicker from "expo-image-picker";
+import { Alert } from "react-native";
+import { NO_AVATAR, REQIRED_FIELD } from "../services/constants";
 
 const SignUpScreen = () => {
     const [userName, setUserName] = useState("");
-    const [email, setEmail] = useState("");
-    const [password, setPassword] = useState("");
+    const [userEmail, setUserEmail] = useState("");
+    const [userPassword, setUserPassword] = useState("");
+    const [userPhoto, setUserPhoto] = useState(NO_AVATAR);
     const [showPassword, setShowPassword] = useState(true);
     const iconAddAvatar = iconAdd("white", "#FF6C00", "#FF6C00");
 
     const navigation = useNavigation();
+
+    const dispatch = useDispatch();
 
     const onPressShowPassword = () => {
         const passState = showPassword;
         setShowPassword(!passState);
     };
 
-    const signUp = () => {
-        const userData = {
-            userName,
-            email,
-            password,
-        };
-        console.debug(userData);
+    const onLoadImage = async () => {
+        let result = await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ImagePicker.MediaTypeOptions.All,
+            allowsEditing: true,
+            aspect: [1, 1],
+            quality: 1,
+        });
+        setUserPhoto(result.assets[0].uri);
+    };
+
+    const onSignUp = () => {
+        if (userName === "" || userEmail === "" || userPassword === "") {
+            Alert.alert(REQIRED_FIELD);
+            return;
+        }
+        dispatch(
+            signUpOperation({
+                userName,
+                userEmail,
+                userPassword,
+                userPhoto,
+            })
+        );
         setUserName("");
-        setEmail("");
-        setPassword("");
+        setUserEmail("");
+        setUserPassword("");
         setShowPassword(true);
+        if (authError) {
+            Alert.alert(UNAUTHORISED);
+            return;
+        }
+        navigation.navigate("Home");
     };
 
     return (
@@ -49,7 +79,18 @@ const SignUpScreen = () => {
                 <Background>
                     <View style={styles.wrapper}>
                         <View style={styles.photoWrapper}>
-                            <Pressable style={styles.btnAddImage}>
+                            <Image
+                                source={{ uri: userPhoto }}
+                                style={{
+                                    width: 120,
+                                    height: 120,
+                                    borderRadius: 16,
+                                }}
+                            />
+                            <Pressable
+                                onPress={onLoadImage}
+                                style={styles.btnAddImage}
+                            >
                                 <SvgXml xml={iconAddAvatar} />
                             </Pressable>
                         </View>
@@ -70,16 +111,16 @@ const SignUpScreen = () => {
                                     <TextInput
                                         style={styles.input}
                                         placeholder="Адреса електронної пошти"
-                                        value={email}
-                                        onChangeText={setEmail}
+                                        value={userEmail}
+                                        onChangeText={setUserEmail}
                                     />
                                     <View style={styles.passInputWrapper}>
                                         <TextInput
                                             style={styles.input}
                                             placeholder="Пароль"
                                             secureTextEntry={showPassword}
-                                            value={password}
-                                            onChangeText={setPassword}
+                                            value={userPassword}
+                                            onChangeText={setUserPassword}
                                         />
                                         <Pressable
                                             style={styles.btnShowPass}
@@ -95,7 +136,7 @@ const SignUpScreen = () => {
                                 </View>
                             </KeyboardAvoidingView>
                             <BtnStyled
-                                onPress={signUp}
+                                onPress={onSignUp}
                                 bgColor="#FF6C00"
                                 textColor="#fff"
                                 title="Зареєстуватися"

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import * as Location from "expo-location";
+import * as ImagePicker from "expo-image-picker";
 import {
     StyleSheet,
     Pressable,
@@ -30,22 +31,31 @@ import { StatusBar } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { ScrollView } from "react-native";
 import { useHeaderHeight } from "@react-navigation/elements";
+import { useSelector } from "react-redux";
+import { selectUserId } from "../redux/selectors";
+import { addDoc, collection, updateDoc } from "firebase/firestore";
+import { db, storage } from "../../firebase-config";
+import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 
 const layoutHeight = Dimensions.get("window").height;
 
-export const CreatePostsScreen = () => {
+const CreatePostsScreen = () => {
+    const [latitude, setLatitude] = useState(null);
+    const [longitude, setLongitude] = useState(null);
     const [location, setLocation] = useState(null);
     const [hasPermission, setHasPermission] = useState(null);
     const [cameraRef, setCameraRef] = useState(null);
     const [type, setType] = useState(Camera.Constants.Type.back);
     const [showCamera, setShowCamera] = useState(false);
     const [photo, setPhoto] = useState(null);
-    const [postName, setPostName] = useState("");
+    const [postTitle, setPostTitle] = useState("");
     const [allowSubmit, setAllowSubmit] = useState(false);
 
     const navigation = useNavigation();
 
     const headerHeight = useHeaderHeight();
+
+    const userId = useSelector(selectUserId);
 
     useEffect(() => {
         (async () => {
@@ -56,30 +66,38 @@ export const CreatePostsScreen = () => {
     }, []);
 
     useEffect(() => {
-        if (photo)
-            (async () => {
-                const { status } =
-                    await Location.requestForegroundPermissionsAsync();
-                if (status !== "granted") {
-                    console.log("Permission to access location was denied");
-                    return;
-                }
-                const currentPosition = await Location.getCurrentPositionAsync(
-                    {}
-                );
-                const geoCode = await Location.reverseGeocodeAsync(
-                    currentPosition.coords
-                );
-                const region = geoCode[0]["region"];
-                const country = geoCode[0]["country"];
-                setLocation(`${region}, ${country}`);
-            })();
-    }, [photo]);
+        (async () => {
+            const { status } =
+                await Location.requestForegroundPermissionsAsync();
+            if (status !== "granted") {
+                console.log("Permission to access location was denied");
+                return;
+            }
+            const currentPosition = await Location.getCurrentPositionAsync({});
+            const geoCode = await Location.reverseGeocodeAsync(
+                currentPosition.coords
+            );
+            setLatitude(currentPosition.coords.latitude);
+            setLongitude(currentPosition.coords.longitude);
+            const region = geoCode[0]["region"];
+            const country = geoCode[0]["country"];
+            setLocation(`${region}, ${country}`);
+        })();
+    }, []);
 
     useEffect(() => {
-        if (photo && location && postName.length > 3) setAllowSubmit(true);
+        if (photo && location && postTitle.length > 3) setAllowSubmit(true);
         else setAllowSubmit(false);
-    }, [photo, location, postName]);
+    }, [photo, location, postTitle]);
+
+    const onLoadImage = async () => {
+        let result = await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ImagePicker.MediaTypeOptions.All,
+            quality: 1,
+        });
+        console.log(result.assets[0].uri);
+        if (result.assets[0].uri) setPhoto(result.assets[0].uri);
+    };
 
     if (hasPermission === null) {
         return <View />;
@@ -97,8 +115,44 @@ export const CreatePostsScreen = () => {
         }
     };
 
-    const onPublic = () => {
+    const onPublic = async () => {
+        const post = {
+            userId,
+            photo,
+            postTitle,
+            location,
+            latitude,
+            longitude,
+            comments: 0,
+            likes: 0,
+            postDate: Date.now(),
+        };
+        try {
+            const docRef = await addDoc(collection(db, "posts"), {
+                ...post,
+            });
+            const postImageRef = ref(storage, `posts/${docRef.id}.jpg`);
+            const img = await fetch(post.photo);
+            const blobImg = await img.blob();
+            await uploadBytes(postImageRef, blobImg);
+            const avatarUrl = await getDownloadURL(ref(storage, postImageRef));
+            await updateDoc(docRef, {
+                photo: avatarUrl,
+                postId: docRef.id,
+            });
+        } catch (error) {
+            return console.log(error.message);
+        }
         navigation.navigate("Posts");
+    };
+
+    const onClear = () => {
+        setAllowSubmit(false);
+        setPhoto(null);
+        setLocation(null);
+        setLatitude(null);
+        setLongitude(null);
+        setPostTitle(null);
     };
 
     return (
@@ -164,15 +218,34 @@ export const CreatePostsScreen = () => {
                                 style={styles.image}
                             />
                         </View>
-                        <Text style={styles.imageTitle}>Завантажте фото</Text>
+                        <Pressable onPress={onLoadImage}>
+                            <Text style={styles.imageTitle}>
+                                Завантажте фото
+                            </Text>
+                        </Pressable>
                         <TextInput
                             style={styles.input}
-                            value={postName}
-                            onChangeText={setPostName}
+                            value={postTitle}
+                            onChangeText={setPostTitle}
                             placeholder="Назва..."
                         />
                         <View style={styles.geoInputWrapper}>
-                            <SvgXml xml={iconMarker} style={styles.marker} />
+                            <Pressable
+                                onPress={() =>
+                                    navigation.navigate(
+                                        "Map",
+                                        (locationValue = {
+                                            latitude,
+                                            longitude,
+                                        })
+                                    )
+                                }
+                            >
+                                <SvgXml
+                                    xml={iconMarker}
+                                    style={styles.marker}
+                                />
+                            </Pressable>
                             <TextInput
                                 style={styles.geoInput}
                                 value={location}
@@ -182,6 +255,7 @@ export const CreatePostsScreen = () => {
                         </View>
                         <BtnStyled
                             onPress={onPublic}
+                            isAllowed={allowSubmit}
                             bgColor={allowSubmit ? "#FF6C00" : "#F6F6F6"}
                             textColor={allowSubmit ? "#fff" : "#BDBDBD"}
                             title="Опублікувати"
@@ -191,7 +265,7 @@ export const CreatePostsScreen = () => {
                 <View style={styles.footer}>
                     <Pressable
                         style={styles.btnDeletePublication}
-                        onPress={() => {}}
+                        onPress={onClear}
                     >
                         <SvgXml xml={iconRecicle} />
                     </Pressable>
@@ -275,20 +349,17 @@ const styles = StyleSheet.create({
         borderColor: "#E8E8E8",
     },
     geoInputWrapper: {
-        position: "relative",
+        flexDirection: "row",
+        alignItems: "center",
+        marginBottom: 32,
+        borderBottomWidth: 1,
+        borderColor: "#E8E8E8",
     },
-    marker: {
-        position: "absolute",
-        top: 13,
-        left: 0,
-    },
+    marker: {},
     geoInput: {
         width: "100%",
         height: 50,
-        marginBottom: 32,
-        paddingLeft: 28,
-        borderBottomWidth: 1,
-        borderColor: "#E8E8E8",
+        paddingLeft: 4,
     },
     footer: {
         alignItems: "center",
@@ -309,3 +380,5 @@ const styles = StyleSheet.create({
         marginBottom: 16,
     },
 });
+
+export default CreatePostsScreen;

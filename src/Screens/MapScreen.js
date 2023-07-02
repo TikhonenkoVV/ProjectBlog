@@ -10,7 +10,6 @@ const MapScreen = () => {
         params: { latitude, longitude },
     } = useRoute();
 
-    // console.log(latitude, longitude);
     const [location, setLocation] = useState(locationValue);
 
     useEffect(() => {
@@ -35,8 +34,13 @@ const MapScreen = () => {
                 longitudeDelta: 0.0421,
             }}
             showsUserLocation={true}
-            mapType="standard"
-            minZoomLevel={15}
+            mapType="hybrid"
+            minZoomLevel={1}
+            moveOnMarkerPress="false"
+            onPress={(event) => {
+                console.log(event.nativeEvent.coordinate);
+                setLocation(event.nativeEvent.coordinate);
+            }}
         >
             <Marker
                 title="I am here"

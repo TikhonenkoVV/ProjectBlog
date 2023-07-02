@@ -1,7 +1,13 @@
 import { Text, Pressable } from "react-native";
 import { StyleSheet } from "react-native";
 
-export const BtnStyled = ({ bgColor, textColor, onPress, title }) => {
+export const BtnStyled = ({
+    bgColor,
+    textColor,
+    onPress,
+    title,
+    isAllowed,
+}) => {
     return (
         <Pressable
             style={{
@@ -9,6 +15,7 @@ export const BtnStyled = ({ bgColor, textColor, onPress, title }) => {
                 backgroundColor: bgColor,
             }}
             onPress={onPress}
+            disabled={!isAllowed}
         >
             <Text style={{ ...styles.btnTitle, color: textColor }}>
                 {title}

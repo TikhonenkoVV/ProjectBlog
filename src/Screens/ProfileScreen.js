@@ -1,194 +1,159 @@
+import { useEffect, useState } from "react";
+
+import { useDispatch, useSelector } from "react-redux";
+import {
+    selectIsLoggedIn,
+    selectUserId,
+    selectUserName,
+    selectUserPhoto,
+} from "../redux/selectors";
+import { signOutOperation } from "../redux/auth/operations";
+
 import {
     StyleSheet,
     Text,
     View,
     Pressable,
-    ScrollView,
     Image,
     Dimensions,
 } from "react-native";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
-import { Background } from "../Components/Background";
-import { SvgXml } from "react-native-svg";
-import avatar from "../../assets/img/avatar_large.jpg";
 import { useNavigation } from "@react-navigation/native";
-import { BtnLogout } from "../Components/BtnLogout";
-import {
-    iconAdd,
-    iconComments,
-    iconLikes,
-    iconMarker,
-} from "../../assets/img/icons";
-import { data } from "../data";
+import { SvgXml } from "react-native-svg";
+
+import { Background } from "../Components/Background";
+import { iconAdd, iconLogOut } from "../../assets/img/icons";
+import { PostItem } from "../Components/PostItem";
+import { collection, onSnapshot, query, where } from "firebase/firestore";
+import { FlatList } from "react-native";
+import { db } from "../../firebase-config";
 
 const windowHeight = Dimensions.get("window").height;
 
 export const ProfileScreen = () => {
-    const barHeight = useBottomTabBarHeight();
     const navigation = useNavigation();
+
+    const [postsArray, setPostArray] = useState([]);
+
+    const barHeight = useBottomTabBarHeight();
+
+    const dispatch = useDispatch();
+
+    const isLoggedUser = useSelector(selectIsLoggedIn);
+    const userId = useSelector(selectUserId);
+    const userName = useSelector(selectUserName);
+    const userPhoto = useSelector(selectUserPhoto);
+
     const iconAddAvatar = iconAdd("white", "#E8E8E8", "#BDBDBD");
-    const iconCommentsFalse = iconComments("none", "#BDBDBD");
-    const iconCommentsTrue = iconComments("#FF6C00", "#FF6C00");
-    const iconLikesFalse = iconLikes("#BDBDBD");
-    const iconLikesTrue = iconLikes("#FF6C00");
+
+    const getAllPosts = () => {
+        try {
+            const snapShot = query(
+                collection(db, "posts"),
+                where("userId", "==", userId)
+            );
+            onSnapshot(snapShot, (posts) => {
+                const arr = [];
+                posts.forEach((post) => arr.push(post.data()));
+                arr.sort((a, b) => b.postDate - a.postDate);
+                setPostArray(arr);
+            });
+        } catch (error) {
+            return console.log(error.message);
+        }
+    };
+
+    useEffect(() => {
+        if (isLoggedUser) getAllPosts();
+    }, [isLoggedUser]);
+
+    const onSignOut = () => {
+        dispatch(signOutOperation());
+        navigation.navigate("Login");
+    };
 
     return (
         <Background>
-            <ScrollView style={styles.scrollView}>
+            <View style={styles.container}>
+                <Pressable
+                    style={{
+                        position: "absolute",
+                        top: 172,
+                        right: 16,
+                        paddingRight: 16,
+                        zIndex: 1,
+                    }}
+                    onPress={onSignOut}
+                >
+                    <SvgXml xml={iconLogOut} />
+                </Pressable>
+                <View style={styles.photoWrapper}>
+                    <Pressable style={styles.btnAddImage}>
+                        <SvgXml
+                            xml={iconAddAvatar}
+                            style={{
+                                transform: [{ rotate: "45deg" }],
+                            }}
+                        />
+                    </Pressable>
+                    <Image
+                        style={{
+                            display: "flex",
+                            width: 120,
+                            height: 120,
+                            borderRadius: 16,
+                        }}
+                        source={{ uri: userPhoto }}
+                    />
+                </View>
                 <View
                     style={{
-                        minHeight: windowHeight - 150 - barHeight,
-                        ...styles.wrapper,
+                        flex: 1,
+                        backgroundColor: "#fff",
+                        paddingTop: 92,
+                        borderTopLeftRadius: 25,
+                        borderTopRightRadius: 25,
                     }}
                 >
-                    <View style={styles.container}>
-                        <BtnLogout
-                            position="absolute"
-                            top={22}
-                            right={16}
-                            onPress={() => navigation.navigate("Login")}
-                        />
-                        <View style={styles.photoWrapper}>
-                            <Pressable style={styles.btnAddImage}>
-                                <SvgXml
-                                    xml={iconAddAvatar}
-                                    style={{ transform: [{ rotate: "45deg" }] }}
-                                />
-                            </Pressable>
-                            <Image
-                                style={{ borderRadius: 16 }}
-                                source={avatar}
-                            />
-                        </View>
-                        <Text style={styles.title}>Natali Romanova </Text>
-                        {data.map(
-                            ({
-                                id,
-                                image,
-                                title,
-                                comments,
-                                likes,
-                                location,
-                                latitude,
-                                longitude,
-                            }) => {
-                                return (
-                                    <View key={id} style={styles.postWrapper}>
-                                        <Image
-                                            source={image}
-                                            style={styles.image}
-                                        />
-                                        <Text style={styles.imageTitle}>
-                                            {title}
-                                        </Text>
-                                        <View style={styles.stats}>
-                                            <Pressable
-                                                onPress={() =>
-                                                    navigation.navigate(
-                                                        "Comments"
-                                                    )
-                                                }
-                                                style={{
-                                                    marginRight: 24,
-                                                    ...styles.statsItem,
-                                                }}
-                                            >
-                                                <SvgXml
-                                                    xml={
-                                                        comments > 0
-                                                            ? iconCommentsTrue
-                                                            : iconCommentsFalse
-                                                    }
-                                                    style={{ marginRight: 6 }}
-                                                />
-                                                <Text>{comments}</Text>
-                                            </Pressable>
-                                            <View
-                                                style={{
-                                                    marginRight: 24,
-                                                    ...styles.statsItem,
-                                                }}
-                                            >
-                                                <SvgXml
-                                                    xml={
-                                                        likes > 0
-                                                            ? iconLikesTrue
-                                                            : iconLikesFalse
-                                                    }
-                                                    style={{ marginRight: 6 }}
-                                                />
-                                                <Text>{likes}</Text>
-                                            </View>
-                                            <View
-                                                style={{
-                                                    marginLeft: "auto",
-                                                    ...styles.statsItem,
-                                                }}
-                                            >
-                                                <Pressable
-                                                    onPress={() =>
-                                                        navigation.navigate(
-                                                            "Map",
-                                                            (locationValue = {
-                                                                latitude,
-                                                                longitude,
-                                                            })
-                                                        )
-                                                    }
-                                                    style={{
-                                                        marginRight: 6,
-                                                    }}
-                                                >
-                                                    <SvgXml xml={iconMarker} />
-                                                </Pressable>
-                                                <Text
-                                                    style={{
-                                                        textDecorationLine:
-                                                            "underline",
-                                                    }}
-                                                >
-                                                    {location}
-                                                </Text>
-                                            </View>
-                                        </View>
-                                    </View>
-                                );
-                            }
-                        )}
-                    </View>
+                    <Text style={styles.title}>{userName}</Text>
+                    <FlatList
+                        data={postsArray}
+                        renderItem={({ item }) =>
+                            postsArray.length > 0 && (
+                                <View
+                                    style={{
+                                        paddingHorizontal: 16,
+                                        backgroundColor: "#fff",
+                                    }}
+                                >
+                                    <PostItem item={item} />
+                                </View>
+                            )
+                        }
+                    />
                 </View>
-            </ScrollView>
+            </View>
         </Background>
     );
 };
 
 const styles = StyleSheet.create({
-    scrollView: {
-        height: windowHeight,
-    },
-    wrapper: {
-        paddingHorizontal: 16,
-        width: "100%",
-        marginTop: 150,
-        position: "relative",
-        backgroundColor: "#fff",
-        borderTopLeftRadius: 25,
-        borderTopRightRadius: 25,
-    },
     container: {
         position: "relative",
+        paddingTop: 150,
         flex: 1,
         flexGrow: 1,
-        paddingTop: 92,
     },
     photoWrapper: {
         position: "absolute",
+        top: 90,
         left: "50%",
-        transform: [{ translateX: -60 }, { translateY: -60 }],
+        transform: [{ translateX: -60 }],
         width: 120,
         height: 120,
         borderRadius: 16,
         backgroundColor: "#F6F6F6",
+        zIndex: 1,
     },
     btnAddImage: {
         position: "absolute",

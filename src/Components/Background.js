@@ -20,10 +20,10 @@ export const Background = ({ children }) => {
 const styles = StyleSheet.create({
     background: {
         flex: 1,
-        justifyContent: "center",
+        // justifyContent: "center",
         width: "100%",
         height: "100%",
         justifyContent: "flex-end",
-        overflow: "hidden",
+        // overflow: "hidden",
     },
 });
