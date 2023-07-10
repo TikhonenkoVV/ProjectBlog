@@ -35,9 +35,8 @@ const SignUpScreen = () => {
     const authError = useSelector(selectError);
 
     useEffect(() => {
-        if (authError) Alert.alert(UNAUTHORISED);
         if (isLogged) navigation.navigate("Home");
-    }, [isLogged, authError]);
+    }, [isLogged]);
 
     const navigation = useNavigation();
 
@@ -58,7 +57,7 @@ const SignUpScreen = () => {
         setUserPhoto(result.assets[0].uri);
     };
 
-    const onSignUp = () => {
+    const onSignUp = async () => {
         if (userName === "" || userEmail === "" || userPassword === "") {
             Alert.alert(REQIRED_FIELD);
             return;
@@ -75,6 +74,10 @@ const SignUpScreen = () => {
         setUserEmail("");
         setUserPassword("");
         setShowPassword(true);
+        if (authError) {
+            Alert.alert(UNAUTHORISED);
+            return;
+        }
     };
 
     return (

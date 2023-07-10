@@ -29,9 +29,8 @@ const LoginScreen = () => {
     const authError = useSelector(selectError);
 
     useEffect(() => {
-        if (authError) Alert.alert(UNAUTHORISED);
         if (isLogged) navigation.navigate("Home");
-    }, [isLogged, authError]);
+    }, [isLogged]);
 
     const navigation = useNavigation();
 
@@ -56,6 +55,10 @@ const LoginScreen = () => {
         setUserEmail("");
         setUserPassword("");
         setShowPassword(true);
+        if (authError) {
+            Alert.alert(UNAUTHORISED);
+            return;
+        }
     };
 
     return (
