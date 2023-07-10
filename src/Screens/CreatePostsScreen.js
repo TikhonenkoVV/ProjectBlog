@@ -27,8 +27,7 @@ import { Camera } from "expo-camera";
 import * as MediaLibrary from "expo-media-library";
 import { TouchableOpacity } from "react-native";
 import { Dimensions } from "react-native";
-import { StatusBar } from "react-native";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useRoute } from "@react-navigation/native";
 import { ScrollView } from "react-native";
 import { useHeaderHeight } from "@react-navigation/elements";
 import { useSelector } from "react-redux";
@@ -36,12 +35,16 @@ import { selectUserId } from "../redux/selectors";
 import { addDoc, collection, updateDoc } from "firebase/firestore";
 import { db, storage } from "../../firebase-config";
 import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
+import { Alert } from "react-native";
+import { Modal } from "react-native";
+import * as ScreenOrientation from "expo-screen-orientation";
+import Constants from "expo-constants";
 
-const layoutHeight = Dimensions.get("window").height;
+const windowSize = Dimensions.get("window");
+const StatusBarHeight = Constants.statusBarHeight;
 
 const CreatePostsScreen = () => {
-    const [latitude, setLatitude] = useState(null);
-    const [longitude, setLongitude] = useState(null);
+    const [coords, setCoords] = useState(null);
     const [location, setLocation] = useState(null);
     const [hasPermission, setHasPermission] = useState(null);
     const [cameraRef, setCameraRef] = useState(null);
@@ -49,21 +52,15 @@ const CreatePostsScreen = () => {
     const [showCamera, setShowCamera] = useState(false);
     const [photo, setPhoto] = useState(null);
     const [postTitle, setPostTitle] = useState("");
-    const [allowSubmit, setAllowSubmit] = useState(false);
+    const [allowSubmit, setAllowSubmit] = useState(true);
+    const [bgrColor, setBgrColor] = useState("#F6F6F6");
+    const [orientation, setOrientation] = useState(1);
+    const [style, setStyle] = useState(styles.btnWrapperP);
+    const [showModal, setShowModal] = useState(false);
 
-    const navigation = useNavigation();
-
-    const headerHeight = useHeaderHeight();
-
-    const userId = useSelector(selectUserId);
-
-    useEffect(() => {
-        (async () => {
-            const { status } = await Camera.requestCameraPermissionsAsync();
-            await MediaLibrary.requestPermissionsAsync();
-            setHasPermission(status === "granted");
-        })();
-    }, []);
+    const {
+        params: { latitude, longitude },
+    } = useRoute();
 
     useEffect(() => {
         (async () => {
@@ -73,38 +70,96 @@ const CreatePostsScreen = () => {
                 console.log("Permission to access location was denied");
                 return;
             }
-            const currentPosition = await Location.getCurrentPositionAsync({});
-            const geoCode = await Location.reverseGeocodeAsync(
-                currentPosition.coords
-            );
-            setLatitude(currentPosition.coords.latitude);
-            setLongitude(currentPosition.coords.longitude);
-            const region = geoCode[0]["region"];
-            const country = geoCode[0]["country"];
-            setLocation(`${region}, ${country}`);
+            const { coords } = await Location.getCurrentPositionAsync({});
+            setCoords({
+                latitude: coords.latitude,
+                longitude: coords.longitude,
+            });
         })();
+
+        ScreenOrientation.addOrientationChangeListener(
+            ({ orientationInfo }) => {
+                setOrientation(orientationInfo.orientation);
+            }
+        );
     }, []);
 
     useEffect(() => {
-        if (photo && location && postTitle.length > 3) setAllowSubmit(true);
-        else setAllowSubmit(false);
+        if (latitude & longitude) {
+            setCoords({ latitude, longitude });
+            (async () => {
+                const geoCode = await Location.reverseGeocodeAsync({
+                    latitude,
+                    longitude,
+                });
+                const region = geoCode[0]["region"];
+                const country = geoCode[0]["country"];
+                setLocation(`${region}, ${country}`);
+            })();
+        }
+    }, [latitude]);
+
+    useEffect(() => {
+        if (photo) {
+            (async () => {
+                const geoCode = await Location.reverseGeocodeAsync(coords);
+                const region = geoCode[0]["region"];
+                const country = geoCode[0]["country"];
+                setLocation(`${region}, ${country}`);
+            })();
+        }
+    }, [photo]);
+
+    useEffect(() => {
+        if (orientation === 1) {
+            setStyle(styles.btnWrapperP);
+        } else {
+            setStyle(styles.btnWrapperLL);
+        }
+    }, [orientation]);
+
+    useEffect(() => {
+        (async () => {
+            if (showCamera) await ScreenOrientation.unlockAsync();
+            if (!showCamera)
+                await ScreenOrientation.lockAsync(
+                    ScreenOrientation.OrientationLock.PORTRAIT_UP
+                );
+        })();
+    }, [showCamera]);
+
+    useEffect(() => {
+        if (!hasPermission)
+            (async () => {
+                const { status } = await Camera.requestCameraPermissionsAsync();
+                await MediaLibrary.requestPermissionsAsync();
+                setHasPermission(status === "granted");
+            })();
+    }, [hasPermission]);
+
+    useEffect(() => {
+        if (photo && location && postTitle.length > 3) setAllowSubmit(false);
+        else setAllowSubmit(true);
+        if (photo || location || postTitle.length > 1) setBgrColor("#FF6C00");
+        else setBgrColor("#F6F6F6");
     }, [photo, location, postTitle]);
+
+    const navigation = useNavigation();
+
+    const headerHeight = useHeaderHeight();
+
+    const userId = useSelector(selectUserId);
 
     const onLoadImage = async () => {
         let result = await ImagePicker.launchImageLibraryAsync({
             mediaTypes: ImagePicker.MediaTypeOptions.All,
             quality: 1,
         });
-        console.log(result.assets[0].uri);
-        if (result.assets[0].uri) setPhoto(result.assets[0].uri);
+        if (!result.canceled) {
+            setShowModal(true);
+            setPhoto(result.assets[0].uri);
+        }
     };
-
-    if (hasPermission === null) {
-        return <View />;
-    }
-    if (hasPermission === false) {
-        return <Text>No access to camera</Text>;
-    }
 
     const takePhoto = async () => {
         if (cameraRef) {
@@ -121,12 +176,13 @@ const CreatePostsScreen = () => {
             photo,
             postTitle,
             location,
-            latitude,
-            longitude,
+            latitude: coords.latitude,
+            longitude: coords.longitude,
             comments: 0,
             likes: 0,
             postDate: Date.now(),
         };
+        setAllowSubmit(false);
         try {
             const docRef = await addDoc(collection(db, "posts"), {
                 ...post,
@@ -140,177 +196,255 @@ const CreatePostsScreen = () => {
                 photo: avatarUrl,
                 postId: docRef.id,
             });
+            Alert.alert("Ви опубліковали повідомлення");
+            navigation.navigate("Posts");
         } catch (error) {
+            setAllowSubmit(true);
             return console.log(error.message);
         }
-        navigation.navigate("Posts");
+    };
+
+    const onShowCamera = () => {
+        setShowCamera(true);
     };
 
     const onClear = () => {
         setAllowSubmit(false);
         setPhoto(null);
         setLocation(null);
-        setLatitude(null);
-        setLongitude(null);
-        setPostTitle(null);
+        setPostTitle("");
     };
 
+    const goToMap = () =>
+        navigation.navigate(
+            "Map",
+            (params = {
+                latitude: coords.latitude,
+                longitude: coords.longitude,
+                goBack: "CreatePost",
+            })
+        );
+
+    const closeModal = () => setShowModal(false);
+
     return (
-        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-            <View
-                style={{
-                    ...styles.container,
-                    height: layoutHeight - headerHeight,
-                }}
-            >
-                {showCamera && (
-                    <View style={styles.cameraContainer}>
-                        <Camera
-                            style={styles.camera}
-                            type={type}
-                            ref={setCameraRef}
-                        ></Camera>
-                        <View style={styles.btnWrapper}>
-                            <TouchableOpacity
-                                style={{ padding: 10 }}
-                                onPress={() => {
-                                    setShowCamera(false);
-                                }}
-                            >
-                                <SvgXml xml={iconCameraExit} />
-                            </TouchableOpacity>
-                            <TouchableOpacity
-                                style={styles.button}
-                                onPress={takePhoto}
-                            >
-                                <SvgXml xml={iconCameraSnap} />
-                            </TouchableOpacity>
-                            <TouchableOpacity
-                                style={{ padding: 10 }}
-                                onPress={() => {
-                                    setType(
-                                        type === Camera.Constants.Type.back
-                                            ? Camera.Constants.Type.front
-                                            : Camera.Constants.Type.back
-                                    );
-                                }}
-                            >
-                                <SvgXml xml={iconCameraFlip} />
-                            </TouchableOpacity>
-                        </View>
+        <>
+            {showCamera && (
+                <Modal style={styles.cameraContainer}>
+                    <Camera
+                        style={styles.camera}
+                        type={type}
+                        ref={setCameraRef}
+                        ratio="16:9"
+                    />
+                    <View style={{ ...styles.btnWrapper, ...style }}>
+                        <TouchableOpacity
+                            style={{ padding: 10 }}
+                            onPress={() => {
+                                setShowCamera(false);
+                            }}
+                        >
+                            <SvgXml xml={iconCameraExit} />
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            style={styles.button}
+                            onPress={takePhoto}
+                        >
+                            <SvgXml xml={iconCameraSnap} />
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            style={{ padding: 10 }}
+                            onPress={() => {
+                                setType(
+                                    type === Camera.Constants.Type.back
+                                        ? Camera.Constants.Type.front
+                                        : Camera.Constants.Type.back
+                                );
+                            }}
+                        >
+                            <SvgXml xml={iconCameraFlip} />
+                        </TouchableOpacity>
                     </View>
-                )}
-                <KeyboardAvoidingView
-                    keyboardVerticalOffset={headerHeight}
-                    behavior={Platform.OS === "ios" ? "padding" : "height"}
-                    style={{ marginBottom: "auto" }}
+                </Modal>
+            )}
+            <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+                <View
+                    style={{
+                        ...styles.layout,
+                        height:
+                            windowSize.height - headerHeight - StatusBarHeight,
+                        width: windowSize.width,
+                    }}
                 >
-                    <ScrollView>
-                        <View style={styles.imageWrapper}>
-                            <TouchableOpacity
-                                onPress={() => setShowCamera(true)}
-                                style={styles.btnCamera}
-                            >
-                                <SvgXml xml={iconCamera} />
-                            </TouchableOpacity>
-                            <Image
-                                source={{ uri: photo }}
-                                style={styles.image}
-                            />
-                        </View>
-                        <Pressable onPress={onLoadImage}>
-                            <Text style={styles.imageTitle}>
-                                Завантажте фото
-                            </Text>
-                        </Pressable>
-                        <TextInput
-                            style={styles.input}
-                            value={postTitle}
-                            onChangeText={setPostTitle}
-                            placeholder="Назва..."
-                        />
-                        <View style={styles.geoInputWrapper}>
-                            <Pressable
-                                onPress={() =>
-                                    navigation.navigate(
-                                        "Map",
-                                        (locationValue = {
-                                            latitude,
-                                            longitude,
-                                        })
-                                    )
-                                }
-                            >
-                                <SvgXml
-                                    xml={iconMarker}
-                                    style={styles.marker}
+                    <Modal
+                        animationType="slide"
+                        visible={showModal}
+                        transparent={true}
+                    >
+                        <View style={styles.modal}>
+                            <View style={styles.modalBody}>
+                                <Text style={styles.modalTitle}>
+                                    Додати геолокацію?
+                                </Text>
+                                <BtnStyled
+                                    onPress={goToMap}
+                                    title="Обрати на мапі"
                                 />
+                                <BtnStyled
+                                    onPress={() => {}}
+                                    title="Моє місцезнаходження"
+                                />
+                                <BtnStyled
+                                    onPress={closeModal}
+                                    title="Не додавати"
+                                />
+                            </View>
+                        </View>
+                    </Modal>
+                    <KeyboardAvoidingView
+                        keyboardVerticalOffset={headerHeight}
+                        behavior={Platform.OS === "ios" ? "padding" : "height"}
+                        style={{ ...styles.container, marginBottom: "auto" }}
+                    >
+                        <ScrollView>
+                            <View style={styles.imageWrapper}>
+                                <TouchableOpacity
+                                    onPress={onShowCamera}
+                                    style={styles.btnCamera}
+                                >
+                                    <SvgXml xml={iconCamera} />
+                                </TouchableOpacity>
+                                <Image
+                                    source={{ uri: photo }}
+                                    style={styles.image}
+                                />
+                            </View>
+                            <Pressable onPress={onLoadImage}>
+                                <Text style={styles.imageTitle}>
+                                    Завантажте фото
+                                </Text>
                             </Pressable>
                             <TextInput
-                                style={styles.geoInput}
-                                value={location}
-                                onChangeText={setLocation}
-                                placeholder="Місцевість..."
+                                style={styles.input}
+                                value={postTitle}
+                                onChangeText={setPostTitle}
+                                placeholder="Назва..."
                             />
-                        </View>
-                        <BtnStyled
-                            onPress={onPublic}
-                            isAllowed={allowSubmit}
-                            bgColor={allowSubmit ? "#FF6C00" : "#F6F6F6"}
-                            textColor={allowSubmit ? "#fff" : "#BDBDBD"}
-                            title="Опублікувати"
-                        />
-                    </ScrollView>
-                </KeyboardAvoidingView>
-                <View style={styles.footer}>
-                    <Pressable
-                        style={styles.btnDeletePublication}
-                        onPress={onClear}
-                    >
-                        <SvgXml xml={iconRecicle} />
-                    </Pressable>
+                            <View style={styles.geoInputWrapper}>
+                                <Pressable
+                                    onPress={() =>
+                                        navigation.navigate(
+                                            "Map",
+                                            (params = {
+                                                latitude: coords.latitude,
+                                                longitude: coords.longitude,
+                                                goBack: "CreatePost",
+                                            })
+                                        )
+                                    }
+                                >
+                                    <SvgXml
+                                        xml={iconMarker}
+                                        style={styles.marker}
+                                    />
+                                </Pressable>
+                                <TextInput
+                                    style={styles.geoInput}
+                                    value={location}
+                                    onChangeText={setLocation}
+                                    placeholder="Місцевість..."
+                                />
+                            </View>
+                            <BtnStyled
+                                onPress={onPublic}
+                                isAllowed={allowSubmit}
+                                bgColor={!allowSubmit ? "#FF6C00" : "#F6F6F6"}
+                                textColor={!allowSubmit ? "#fff" : "#BDBDBD"}
+                                title="Опублікувати"
+                            />
+                        </ScrollView>
+                    </KeyboardAvoidingView>
+                    <View style={styles.footer}>
+                        <Pressable
+                            style={{
+                                ...styles.btnDeletePublication,
+                                backgroundColor: bgrColor,
+                            }}
+                            onPress={onClear}
+                        >
+                            <SvgXml xml={iconRecicle} />
+                        </Pressable>
+                    </View>
                 </View>
-            </View>
-        </TouchableWithoutFeedback>
+            </TouchableWithoutFeedback>
+        </>
     );
 };
 
 const styles = StyleSheet.create({
-    container: {
-        position: "relative",
-        paddingTop: 32,
-        paddingBottom: 1,
-        paddingHorizontal: 16,
-        backgroundColor: "#fff",
-    },
     cameraContainer: {
-        flex: 1,
-        flexGrow: 1,
-        position: "absolute",
-        top: 0,
-        left: 0,
-        width: Dimensions.get("window").width,
-        height: Dimensions.get("window").height - StatusBar.currentHeight - 55,
-        backgroundColor: "red",
+        width: "100%",
+        height: "100%",
         alignItems: "center",
+        justifyContent: "center",
         overflow: "hidden",
-        zIndex: 2,
+        zIndex: 1,
     },
     camera: {
         flex: 1,
+        width: "100%",
         height: "auto",
-        aspectRatio: 3 / 4,
+    },
+    layout: {
+        position: "relative",
+        backgroundColor: "#fff",
     },
     btnWrapper: {
         position: "absolute",
+        padding: 16,
+        justifyContent: "space-between",
+        backgroundColor: "#00000060",
+    },
+    btnWrapperP: {
         bottom: 0,
         left: 0,
         flexDirection: "row",
+        width: "100%",
+        height: "auto",
+    },
+    btnWrapperLL: {
+        top: 0,
+        right: 0,
+        flexDirection: "column",
+        width: "auto",
+        height: "100%",
+    },
+    modal: {
+        flex: 1,
+        paddingHorizontal: 16,
+        backgroundColor: "#00000090",
+        justifyContent: "center",
+    },
+    modalBody: {
+        borderRadius: 10,
         padding: 16,
-        justifyContent: "space-between",
-        width: Dimensions.get("window").width,
-        backgroundColor: "#000",
-        opacity: 0.4,
+        backgroundColor: "#fff",
+    },
+    modalTitle: {
+        textAlign: "center",
+        fontFamily: "Roboto-Medium",
+        fontSize: 22,
+        marginBottom: 16,
+    },
+    modalBtn: {
+        alignItems: "center",
+        width: "100%",
+        backgroundColor: "#FF6C00",
+    },
+    container: {
+        paddingTop: 32,
+        paddingBottom: 1,
+        paddingHorizontal: 16,
     },
     imageWrapper: {
         position: "relative",
@@ -373,7 +507,6 @@ const styles = StyleSheet.create({
         height: 40,
         marginLeft: 31,
         marginRight: 31,
-        backgroundColor: "#F6F6F6",
         borderRadius: 25,
         justifyContent: "center",
         alignItems: "center",

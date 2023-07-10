@@ -60,44 +60,41 @@ const LoginScreen = () => {
 
     return (
         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-            <View style={styles.container}>
+            <KeyboardAvoidingView
+                style={styles.container}
+                behavior={Platform.OS === "ios" ? "padding" : "height"}
+            >
                 <Background>
                     <View style={styles.wrapper}>
                         <View style={styles.form}>
                             <Text style={styles.title}>Увійти</Text>
-                            <KeyboardAvoidingView
-                                behavior={
-                                    Platform.OS === "ios" ? "padding" : "height"
-                                }
-                            >
-                                <View style={styles.inputWrapper}>
+                            <View style={styles.inputWrapper}>
+                                <TextInput
+                                    style={styles.input}
+                                    placeholder="Адреса електронної пошти"
+                                    value={userEmail}
+                                    onChangeText={setUserEmail}
+                                />
+                                <View style={styles.passInputWrapper}>
                                     <TextInput
                                         style={styles.input}
-                                        placeholder="Адреса електронної пошти"
-                                        value={userEmail}
-                                        onChangeText={setUserEmail}
+                                        placeholder="Пароль"
+                                        secureTextEntry={showPassword}
+                                        value={userPassword}
+                                        onChangeText={setUserPassword}
                                     />
-                                    <View style={styles.passInputWrapper}>
-                                        <TextInput
-                                            style={styles.input}
-                                            placeholder="Пароль"
-                                            secureTextEntry={showPassword}
-                                            value={userPassword}
-                                            onChangeText={setUserPassword}
-                                        />
-                                        <Pressable
-                                            style={styles.btnShowPass}
-                                            onPress={onPressShowPassword}
-                                        >
-                                            <Text>
-                                                {showPassword
-                                                    ? "Показати"
-                                                    : "Приховати"}
-                                            </Text>
-                                        </Pressable>
-                                    </View>
+                                    <Pressable
+                                        style={styles.btnShowPass}
+                                        onPress={onPressShowPassword}
+                                    >
+                                        <Text>
+                                            {showPassword
+                                                ? "Показати"
+                                                : "Приховати"}
+                                        </Text>
+                                    </Pressable>
                                 </View>
-                            </KeyboardAvoidingView>
+                            </View>
                             <BtnStyled
                                 onPress={onSignIn}
                                 bgColor="#FF6C00"
@@ -117,7 +114,7 @@ const LoginScreen = () => {
                         </View>
                     </View>
                 </Background>
-            </View>
+            </KeyboardAvoidingView>
         </TouchableWithoutFeedback>
     );
 };
@@ -133,7 +130,7 @@ const styles = StyleSheet.create({
         position: "relative",
         backgroundColor: "#fff",
         width: "100%",
-        height: "60%",
+        height: 490,
         borderTopLeftRadius: 25,
         borderTopRightRadius: 25,
         paddingTop: 32,

@@ -10,17 +10,18 @@ import {
     View,
 } from "react-native";
 import { SvgXml } from "react-native-svg";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigation } from "@react-navigation/native";
 import { Background } from "../Components/Background";
 import { BtnStyled } from "../Components/BtnStyled";
 import { iconAdd } from "../../assets/img/icons";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { signUpOperation } from "../redux/auth/operations";
 import { Image } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import { Alert } from "react-native";
-import { NO_AVATAR, REQIRED_FIELD } from "../services/constants";
+import { NO_AVATAR, REQIRED_FIELD, UNAUTHORISED } from "../services/constants";
+import { selectError, selectIsLoggedIn } from "../redux/selectors";
 
 const SignUpScreen = () => {
     const [userName, setUserName] = useState("");
@@ -29,6 +30,14 @@ const SignUpScreen = () => {
     const [userPhoto, setUserPhoto] = useState(NO_AVATAR);
     const [showPassword, setShowPassword] = useState(true);
     const iconAddAvatar = iconAdd("white", "#FF6C00", "#FF6C00");
+
+    const isLogged = useSelector(selectIsLoggedIn);
+    const authError = useSelector(selectError);
+
+    useEffect(() => {
+        if (authError) Alert.alert(UNAUTHORISED);
+        if (isLogged) navigation.navigate("Home");
+    }, [isLogged, authError]);
 
     const navigation = useNavigation();
 
@@ -66,16 +75,14 @@ const SignUpScreen = () => {
         setUserEmail("");
         setUserPassword("");
         setShowPassword(true);
-        if (authError) {
-            Alert.alert(UNAUTHORISED);
-            return;
-        }
-        navigation.navigate("Home");
     };
 
     return (
         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-            <View style={styles.container}>
+            <KeyboardAvoidingView
+                style={styles.container}
+                behavior={Platform.OS === "ios" ? "padding" : "height"}
+            >
                 <Background>
                     <View style={styles.wrapper}>
                         <View style={styles.photoWrapper}>
@@ -96,45 +103,46 @@ const SignUpScreen = () => {
                         </View>
                         <View style={styles.form}>
                             <Text style={styles.title}>Реєстрація</Text>
-                            <KeyboardAvoidingView
-                                behavior={
-                                    Platform.OS === "ios" ? "padding" : "height"
-                                }
-                            >
-                                <View style={styles.inputWrapper}>
-                                    <TextInput
-                                        style={styles.input}
-                                        placeholder="Логін"
-                                        value={userName}
-                                        onChangeText={setUserName}
-                                    />
-                                    <TextInput
-                                        style={styles.input}
-                                        placeholder="Адреса електронної пошти"
-                                        value={userEmail}
-                                        onChangeText={setUserEmail}
-                                    />
-                                    <View style={styles.passInputWrapper}>
-                                        <TextInput
-                                            style={styles.input}
-                                            placeholder="Пароль"
-                                            secureTextEntry={showPassword}
-                                            value={userPassword}
-                                            onChangeText={setUserPassword}
-                                        />
-                                        <Pressable
-                                            style={styles.btnShowPass}
-                                            onPress={onPressShowPassword}
-                                        >
-                                            <Text>
-                                                {showPassword
-                                                    ? "Показати"
-                                                    : "Приховати"}
-                                            </Text>
-                                        </Pressable>
-                                    </View>
-                                </View>
-                            </KeyboardAvoidingView>
+                            <TextInput
+                                style={{
+                                    ...styles.input,
+                                    marginBottom: 16,
+                                }}
+                                placeholder="Логін"
+                                value={userName}
+                                onChangeText={setUserName}
+                            />
+                            <TextInput
+                                style={{
+                                    ...styles.input,
+                                    marginBottom: 16,
+                                }}
+                                placeholder="Адреса електронної пошти"
+                                value={userEmail}
+                                onChangeText={setUserEmail}
+                            />
+                            <View style={styles.passInputWrapper}>
+                                <TextInput
+                                    style={{
+                                        ...styles.input,
+                                        marginBottom: 43,
+                                    }}
+                                    placeholder="Пароль"
+                                    secureTextEntry={showPassword}
+                                    value={userPassword}
+                                    onChangeText={setUserPassword}
+                                />
+                                <Pressable
+                                    style={styles.btnShowPass}
+                                    onPress={onPressShowPassword}
+                                >
+                                    <Text>
+                                        {showPassword
+                                            ? "Показати"
+                                            : "Приховати"}
+                                    </Text>
+                                </Pressable>
+                            </View>
                             <BtnStyled
                                 onPress={onSignUp}
                                 bgColor="#FF6C00"
@@ -152,7 +160,7 @@ const SignUpScreen = () => {
                         </View>
                     </View>
                 </Background>
-            </View>
+            </KeyboardAvoidingView>
         </TouchableWithoutFeedback>
     );
 };
@@ -164,19 +172,11 @@ const styles = StyleSheet.create({
         alignItems: "center",
         justifyContent: "center",
     },
-    background: {
-        flex: 1,
-        justifyContent: "center",
-        width: "100%",
-        height: "100%",
-        justifyContent: "flex-end",
-        overflow: "hidden",
-    },
     wrapper: {
         position: "relative",
         backgroundColor: "#fff",
         width: "100%",
-        height: "70%",
+        height: 580,
         borderTopLeftRadius: 25,
         borderTopRightRadius: 25,
         paddingTop: 92,
@@ -204,7 +204,6 @@ const styles = StyleSheet.create({
     form: {
         paddingHorizontal: 16,
         width: "100%",
-        height: "100%",
     },
     title: {
         fontFamily: "Roboto",
@@ -215,8 +214,6 @@ const styles = StyleSheet.create({
         marginBottom: 32,
     },
     inputWrapper: {
-        height: 182,
-        justifyContent: "space-between",
         marginBottom: 43,
     },
     passInputWrapper: {

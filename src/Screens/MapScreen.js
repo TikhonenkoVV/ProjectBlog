@@ -1,60 +1,92 @@
-import { useEffect, useState } from "react";
-import { StyleSheet } from "react-native";
-import { Dimensions } from "react-native";
+import { useState } from "react";
+import { StyleSheet, Dimensions } from "react-native";
 import MapView, { Marker } from "react-native-maps";
-import * as Location from "expo-location";
-import { useRoute } from "@react-navigation/native";
+import { useNavigation, useRoute } from "@react-navigation/native";
+import { View } from "react-native";
+import { useHeaderHeight } from "@react-navigation/elements";
+import { Pressable } from "react-native";
+import { SvgXml } from "react-native-svg";
+import { iconCheck } from "../../assets/img/icons";
+import Constants from "expo-constants";
+
+const StatusBarHeight = Constants.statusBarHeight;
 
 const MapScreen = () => {
     const {
-        params: { latitude, longitude },
+        params: { goBack, latitude, longitude },
     } = useRoute();
 
-    const [location, setLocation] = useState(locationValue);
+    const headerHeight = useHeaderHeight();
+    const navigation = useNavigation();
 
-    useEffect(() => {
-        (async () => {
-            let { status } = await Location.requestForegroundPermissionsAsync();
-            if (status !== "granted") {
-                setErrorMsg("Permission to access location was denied");
-                return;
-            }
-
-            let location = await Location.getCurrentPositionAsync({});
-            setLocation(location);
-        })();
-    }, []);
+    const [location, setLocation] = useState({ latitude, longitude });
+    const [showOkBtn, setShowOkBtn] = useState(false);
 
     return (
-        <MapView
-            style={styles.mapStyle}
-            region={{
-                ...location,
-                latitudeDelta: 0.0922,
-                longitudeDelta: 0.0421,
-            }}
-            showsUserLocation={true}
-            mapType="hybrid"
-            minZoomLevel={1}
-            moveOnMarkerPress="false"
-            onPress={(event) => {
-                console.log(event.nativeEvent.coordinate);
-                setLocation(event.nativeEvent.coordinate);
+        <View
+            style={{
+                position: "relative",
+                width: Dimensions.get("window").width,
+                height:
+                    Dimensions.get("window").height -
+                    headerHeight -
+                    StatusBarHeight,
             }}
         >
-            <Marker
-                title="I am here"
-                coordinate={location}
-                description="Hello"
-            />
-        </MapView>
+            <MapView
+                style={styles.mapStyle}
+                region={{
+                    ...location,
+                    latitudeDelta: 0.0922,
+                    longitudeDelta: 0.0421,
+                }}
+                showsUserLocation={true}
+                mapType="standard"
+                minZoomLevel={1}
+                moveOnMarkerPress="false"
+                onPress={(event) => {
+                    setShowOkBtn(true);
+                    setLocation(event.nativeEvent.coordinate);
+                }}
+            >
+                <Marker
+                    title="I am here"
+                    coordinate={location}
+                    description="Hello"
+                />
+            </MapView>
+            {showOkBtn && (
+                <Pressable
+                    onPress={() => {
+                        navigation.navigate(goBack, (params = { ...location }));
+                    }}
+                    style={styles.okBtn}
+                >
+                    <SvgXml xml={iconCheck} />
+                </Pressable>
+            )}
+        </View>
     );
 };
 
 const styles = StyleSheet.create({
+    okBtn: {
+        position: "absolute",
+        bottom: 14,
+        right: 14,
+        width: 70,
+        height: 70,
+        backgroundColor: "#fff",
+        borderWidth: 2,
+        borderColor: "#ddd",
+        borderRadius: 4,
+        alignItems: "center",
+        justifyContent: "center",
+        opacity: 0.7,
+    },
     mapStyle: {
-        width: Dimensions.get("window").width,
-        height: Dimensions.get("window").height,
+        width: "100%",
+        height: "100%",
     },
 });
 

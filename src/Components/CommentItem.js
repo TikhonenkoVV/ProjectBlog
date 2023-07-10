@@ -67,18 +67,18 @@ const styles = StyleSheet.create({
         backgroundColor: "#F7F7F7",
     },
     comment: {
-        fontFamily: "Roboto",
+        fontFamily: "Roboto-Regular",
         fontSize: 13,
         color: "#212121",
         marginBottom: 8,
     },
     ourDate: {
-        fontFamily: "Roboto",
+        fontFamily: "Roboto-Regular",
         fontSize: 12,
         color: "#BDBDBD",
     },
     date: {
-        fontFamily: "Roboto",
+        fontFamily: "Roboto-Regular",
         fontSize: 12,
         textAlign: "right",
         color: "#BDBDBD",

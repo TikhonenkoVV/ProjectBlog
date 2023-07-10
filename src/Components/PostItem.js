@@ -103,37 +103,36 @@ export const PostItem = ({ item }) => {
                         <Text>{item.likes}</Text>
                     </View>
                 </Pressable>
-                <View
+            </View>
+            {item.location && (
+                <Pressable
                     style={{
-                        marginLeft: "auto",
+                        marginTop: 8,
                         ...styles.statsItem,
                     }}
+                    onPress={() =>
+                        navigation.navigate(
+                            "Map",
+                            (locationValue = {
+                                latitude: item.latitude,
+                                longitude: item.longitude,
+                            })
+                        )
+                    }
                 >
-                    <Pressable
-                        onPress={() =>
-                            navigation.navigate(
-                                "Map",
-                                (locationValue = {
-                                    latitude: item.latitude,
-                                    longitude: item.longitude,
-                                })
-                            )
-                        }
-                        style={{
-                            marginRight: 6,
-                        }}
-                    >
-                        <SvgXml xml={iconMarker} />
-                    </Pressable>
+                    <SvgXml xml={iconMarker} />
                     <Text
                         style={{
+                            fontFamily: "Roboto-Regular",
+                            fontSize: 16,
                             textDecorationLine: "underline",
+                            marginLeft: 6,
                         }}
                     >
                         {item.location}
                     </Text>
-                </View>
-            </View>
+                </Pressable>
+            )}
         </View>
     );
 };
@@ -208,7 +207,7 @@ const styles = StyleSheet.create({
     },
     imageTitle: {
         marginBottom: 8,
-        fontFamily: "Roboto",
+        fontFamily: "Roboto-Medium",
         fontSize: 16,
         color: "#212121",
     },

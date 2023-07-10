@@ -13,11 +13,21 @@ import MapScreen from "./src/Screens/MapScreen";
 import CreatePostsScreen from "./src/Screens/CreatePostsScreen";
 import CommentsScreen from "./src/Screens/CommentsScreen";
 import { persistor, store } from "./src/redux/store";
-import { selectIsLoggedIn } from "./src/redux/selectors";
+import { useFonts } from "expo-font";
 
 const MainStack = createStackNavigator();
 
 export default App = () => {
+    const [fontsLoaded] = useFonts({
+        "Roboto-Bold": require("./assets/fonts/Roboto-Bold.ttf"),
+        "Roboto-Medium": require("./assets/fonts/Roboto-Medium.ttf"),
+        "Roboto-Regular": require("./assets/fonts/Roboto-Regular.ttf"),
+    });
+
+    if (!fontsLoaded) {
+        return null;
+    }
+
     const defaultOptions = {
         headerTitleAlign: "center",
         headerStyle: {
@@ -25,13 +35,11 @@ export default App = () => {
             borderColor: "#b3b3b3",
         },
         headerTitleStyle: {
-            fontFamily: "Roboto",
+            fontFamily: "Roboto-Medium",
             fontSize: 17,
             fontWeight: 500,
         },
     };
-
-    // const isLogged = useSelector(selectIsLoggedIn);
 
     return (
         <Provider store={store}>

@@ -41,18 +41,21 @@ const Home = () => {
 
     const dispatch = useDispatch();
     const goHome = () => navigation.navigate("Posts");
-    const goCreatePost = () => navigation.navigate("CreatePost");
+    const goCreatePost = () =>
+        navigation.navigate(
+            "CreatePost",
+            (params = { latitude: null, longitude: null })
+        );
     const goProfile = () => navigation.navigate("Profile");
 
     const isLogged = useSelector(selectIsLoggedIn);
 
     useEffect(() => {
         if (!isLogged) navigation.navigate("Login");
-    }, []);
+    }, [isLogged]);
 
     const onSignOut = () => {
         dispatch(signOutOperation());
-        navigation.navigate("Login");
     };
 
     return (
@@ -100,6 +103,7 @@ const Home = () => {
                                 top: 10,
                                 right: 16,
                                 paddingRight: 16,
+                                zIndex: 1,
                             }}
                             onPress={onSignOut}
                         >

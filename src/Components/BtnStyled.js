@@ -6,7 +6,7 @@ export const BtnStyled = ({
     textColor,
     onPress,
     title,
-    isAllowed,
+    isAllowed = false,
 }) => {
     return (
         <Pressable
@@ -15,7 +15,7 @@ export const BtnStyled = ({
                 backgroundColor: bgColor,
             }}
             onPress={onPress}
-            disabled={!isAllowed}
+            disabled={isAllowed}
         >
             <Text style={{ ...styles.btnTitle, color: textColor }}>
                 {title}
@@ -28,14 +28,13 @@ const styles = StyleSheet.create({
     btnStyle: {
         width: "100%",
         height: 50,
-        backgroundColor: "#FF6C00",
         borderRadius: 25,
         justifyContent: "center",
         alignItems: "center",
         marginBottom: 16,
     },
     btnTitle: {
-        fontFamily: "Roboto",
+        fontFamily: "Roboto-Regular",
         fontSize: 16,
     },
 });

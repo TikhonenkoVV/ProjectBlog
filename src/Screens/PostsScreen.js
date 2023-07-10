@@ -1,5 +1,6 @@
 import React from "react";
 import { StyleSheet } from "react-native";
+import { StatusBar } from "react-native";
 import { useEffect } from "react";
 import { FlatList } from "react-native-gesture-handler";
 import { useState } from "react";
@@ -30,12 +31,15 @@ const PostsScreen = () => {
     }, []);
 
     return (
-        <FlatList
-            ListFooterComponent={<View style={{ height: 32 }} />}
-            style={styles.main}
-            data={postsArray}
-            renderItem={({ item }) => <PostItem item={item} />}
-        />
+        <>
+            <FlatList
+                ListFooterComponent={<View style={{ height: 32 }} />}
+                style={styles.main}
+                data={postsArray}
+                renderItem={({ item }) => <PostItem item={item} />}
+            />
+            <StatusBar style="light" />
+        </>
     );
 };
 

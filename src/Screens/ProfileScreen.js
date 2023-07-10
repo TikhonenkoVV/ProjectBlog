@@ -9,15 +9,7 @@ import {
 } from "../redux/selectors";
 import { signOutOperation } from "../redux/auth/operations";
 
-import {
-    StyleSheet,
-    Text,
-    View,
-    Pressable,
-    Image,
-    Dimensions,
-} from "react-native";
-import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
+import { StyleSheet, Text, View, Pressable, Image } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { SvgXml } from "react-native-svg";
 
@@ -28,14 +20,10 @@ import { collection, onSnapshot, query, where } from "firebase/firestore";
 import { FlatList } from "react-native";
 import { db } from "../../firebase-config";
 
-const windowHeight = Dimensions.get("window").height;
-
 export const ProfileScreen = () => {
     const navigation = useNavigation();
 
     const [postsArray, setPostArray] = useState([]);
-
-    const barHeight = useBottomTabBarHeight();
 
     const dispatch = useDispatch();
 
@@ -65,25 +53,27 @@ export const ProfileScreen = () => {
 
     useEffect(() => {
         if (isLoggedUser) getAllPosts();
+        if (!isLoggedUser) navigation.navigate("Login");
     }, [isLoggedUser]);
 
     const onSignOut = () => {
         dispatch(signOutOperation());
-        navigation.navigate("Login");
     };
 
     return (
         <Background>
             <View style={styles.container}>
                 <Pressable
+                    onPress={onSignOut}
                     style={{
                         position: "absolute",
+                        width: 24,
+                        height: 24,
                         top: 172,
                         right: 16,
                         paddingRight: 16,
                         zIndex: 1,
                     }}
-                    onPress={onSignOut}
                 >
                     <SvgXml xml={iconLogOut} />
                 </Pressable>
@@ -129,6 +119,11 @@ export const ProfileScreen = () => {
                                     <PostItem item={item} />
                                 </View>
                             )
+                        }
+                        ListEmptyComponent={
+                            <Text style={styles.empty}>
+                                Ви ще не опубліковали жодного посту.
+                            </Text>
                         }
                     />
                 </View>
@@ -197,5 +192,10 @@ const styles = StyleSheet.create({
     },
     statsItem: {
         flexDirection: "row",
+    },
+    empty: {
+        fontFamily: "Roboto-Medium",
+        fontSize: 18,
+        paddingHorizontal: 16,
     },
 });
