@@ -21,7 +21,13 @@ import { Image } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import { Alert } from "react-native";
 import { NO_AVATAR, REQIRED_FIELD, UNAUTHORISED } from "../services/constants";
-import { selectError, selectIsLoggedIn } from "../redux/selectors";
+import {
+    selectError,
+    selectIsLoading,
+    selectIsLoggedIn,
+} from "../redux/selectors";
+import { resetError } from "../redux/auth/slice";
+import { Loader } from "../Components/Loader";
 
 const SignUpScreen = () => {
     const [userName, setUserName] = useState("");
@@ -32,15 +38,26 @@ const SignUpScreen = () => {
     const iconAddAvatar = iconAdd("white", "#FF6C00", "#FF6C00");
 
     const isLogged = useSelector(selectIsLoggedIn);
+    const isLoading = useSelector(selectIsLoading);
     const authError = useSelector(selectError);
-
-    useEffect(() => {
-        if (isLogged) navigation.navigate("Home");
-    }, [isLogged]);
-
     const navigation = useNavigation();
 
     const dispatch = useDispatch();
+
+    useEffect(() => {
+        setUserName("");
+        setUserEmail("");
+        setUserPassword("");
+        setShowPassword(true);
+        if (isLogged) navigation.navigate("Home");
+    }, [isLogged]);
+
+    useEffect(() => {
+        if (authError) {
+            Alert.alert(UNAUTHORISED);
+            dispatch(resetError());
+        }
+    });
 
     const onPressShowPassword = () => {
         const passState = showPassword;
@@ -58,6 +75,7 @@ const SignUpScreen = () => {
     };
 
     const onSignUp = async () => {
+        Keyboard.dismiss();
         if (userName === "" || userEmail === "" || userPassword === "") {
             Alert.alert(REQIRED_FIELD);
             return;
@@ -70,14 +88,6 @@ const SignUpScreen = () => {
                 userPhoto,
             })
         );
-        setUserName("");
-        setUserEmail("");
-        setUserPassword("");
-        setShowPassword(true);
-        if (authError) {
-            Alert.alert(UNAUTHORISED);
-            return;
-        }
     };
 
     return (
@@ -86,6 +96,7 @@ const SignUpScreen = () => {
                 style={styles.container}
                 behavior={Platform.OS === "ios" ? "padding" : "height"}
             >
+                {isLoading && <Loader />}
                 <Background>
                     <View style={styles.wrapper}>
                         <View style={styles.photoWrapper}>

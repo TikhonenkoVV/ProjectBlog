@@ -82,6 +82,7 @@ const CommentsScreen = () => {
             await addDoc(commentsRef, newComment);
             await updateDoc(postRef, { comments: commentsCounter + 1 });
             setMessage(null);
+            Keyboard.dismiss();
             commentsList.current.scrollToEnd();
         } catch (error) {
             console.log(error.message);

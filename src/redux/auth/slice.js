@@ -13,19 +13,29 @@ const initialState = {
         userPhoto: null,
     },
     isLoggedIn: false,
+    isLoading: false,
     error: null,
 };
 
 const authSlice = createSlice({
     name: "auth",
     initialState,
+    reducers: {
+        resetError: (state) => {
+            state.error = null;
+        },
+    },
     extraReducers: (builder) => {
         builder
+            .addCase(signUpOperation.pending, (state) => {
+                state.isLoading = true;
+            })
             .addCase(signUpOperation.fulfilled, (state, action) => {
                 state.user.id = action.payload.id;
                 state.user.userName = action.payload.userName;
                 state.user.userEmail = action.payload.userEmail;
                 state.user.userPhoto = action.payload.userPhoto;
+                state.isLoading = false;
                 state.isLoggedIn = true;
                 state.error = null;
             })
@@ -34,11 +44,15 @@ const authSlice = createSlice({
                 state.isLoading = false;
                 state.isLoggedIn = false;
             })
+            .addCase(signInOperation.pending, (state) => {
+                state.isLoading = true;
+            })
             .addCase(signInOperation.fulfilled, (state, action) => {
                 state.user.id = action.payload.id;
                 state.user.userName = action.payload.userName;
                 state.user.userEmail = action.payload.userEmail;
                 state.user.userPhoto = action.payload.userPhoto;
+                state.isLoading = false;
                 state.isLoggedIn = true;
                 state.error = null;
             })
@@ -62,5 +76,7 @@ const authSlice = createSlice({
             });
     },
 });
+
+export const { resetError } = authSlice.actions;
 
 export const authReducer = authSlice.reducer;

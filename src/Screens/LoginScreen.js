@@ -17,8 +17,14 @@ import { useDispatch, useSelector } from "react-redux";
 import { signInOperation } from "../redux/auth/operations";
 import { Alert } from "react-native";
 import { REQIRED_FIELD, UNAUTHORISED } from "../services/constants";
-import { selectError, selectIsLoggedIn } from "../redux/selectors";
+import {
+    selectError,
+    selectIsLoading,
+    selectIsLoggedIn,
+} from "../redux/selectors";
 import { useEffect } from "react";
+import { resetError } from "../redux/auth/slice";
+import { Loader } from "../Components/Loader";
 
 const LoginScreen = () => {
     const [userEmail, setUserEmail] = useState("");
@@ -26,22 +32,33 @@ const LoginScreen = () => {
     const [showPassword, setShowPassword] = useState(true);
 
     const isLogged = useSelector(selectIsLoggedIn);
+    const isLoading = useSelector(selectIsLoading);
     const authError = useSelector(selectError);
-
-    useEffect(() => {
-        if (isLogged) navigation.navigate("Home");
-    }, [isLogged]);
-
     const navigation = useNavigation();
 
     const dispatch = useDispatch();
+
+    useEffect(() => {
+        setUserEmail("");
+        setUserPassword("");
+        setShowPassword(true);
+        if (isLogged) navigation.navigate("Home");
+    }, [isLogged]);
 
     const onPressShowPassword = () => {
         const passState = showPassword;
         setShowPassword(!passState);
     };
 
+    useEffect(() => {
+        if (authError) {
+            Alert.alert(UNAUTHORISED);
+            dispatch(resetError());
+        }
+    });
+
     const onSignIn = () => {
+        Keyboard.dismiss();
         if (userEmail === "" || userPassword === "") {
             Alert.alert(REQIRED_FIELD);
             return;
@@ -52,13 +69,6 @@ const LoginScreen = () => {
                 userPassword,
             })
         );
-        setUserEmail("");
-        setUserPassword("");
-        setShowPassword(true);
-        if (authError) {
-            Alert.alert(UNAUTHORISED);
-            return;
-        }
     };
 
     return (
@@ -67,6 +77,7 @@ const LoginScreen = () => {
                 style={styles.container}
                 behavior={Platform.OS === "ios" ? "padding" : "height"}
             >
+                {isLoading && <Loader />}
                 <Background>
                     <View style={styles.wrapper}>
                         <View style={styles.form}>

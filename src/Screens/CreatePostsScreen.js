@@ -39,14 +39,15 @@ import { Alert } from "react-native";
 import { Modal } from "react-native";
 import * as ScreenOrientation from "expo-screen-orientation";
 import Constants from "expo-constants";
+import { Loader } from "../Components/Loader";
 
 const windowSize = Dimensions.get("window");
 const StatusBarHeight = Constants.statusBarHeight;
 
 const CreatePostsScreen = () => {
     const [coords, setCoords] = useState(null);
+    const [currentLocation, setCurrentLocation] = useState(null);
     const [location, setLocation] = useState(null);
-    const [hasPermission, setHasPermission] = useState(null);
     const [cameraRef, setCameraRef] = useState(null);
     const [type, setType] = useState(Camera.Constants.Type.back);
     const [showCamera, setShowCamera] = useState(false);
@@ -57,6 +58,7 @@ const CreatePostsScreen = () => {
     const [orientation, setOrientation] = useState(1);
     const [style, setStyle] = useState(styles.btnWrapperP);
     const [showModal, setShowModal] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
 
     const {
         params: { latitude, longitude },
@@ -75,6 +77,10 @@ const CreatePostsScreen = () => {
                 latitude: coords.latitude,
                 longitude: coords.longitude,
             });
+            const geoCode = await Location.reverseGeocodeAsync(coords);
+            const region = geoCode[0]["region"];
+            const country = geoCode[0]["country"];
+            setCurrentLocation(`${region}, ${country}`);
         })();
 
         ScreenOrientation.addOrientationChangeListener(
@@ -100,17 +106,6 @@ const CreatePostsScreen = () => {
     }, [latitude]);
 
     useEffect(() => {
-        if (photo) {
-            (async () => {
-                const geoCode = await Location.reverseGeocodeAsync(coords);
-                const region = geoCode[0]["region"];
-                const country = geoCode[0]["country"];
-                setLocation(`${region}, ${country}`);
-            })();
-        }
-    }, [photo]);
-
-    useEffect(() => {
         if (orientation === 1) {
             setStyle(styles.btnWrapperP);
         } else {
@@ -127,15 +122,6 @@ const CreatePostsScreen = () => {
                 );
         })();
     }, [showCamera]);
-
-    useEffect(() => {
-        if (!hasPermission)
-            (async () => {
-                const { status } = await Camera.requestCameraPermissionsAsync();
-                await MediaLibrary.requestPermissionsAsync();
-                setHasPermission(status === "granted");
-            })();
-    }, [hasPermission]);
 
     useEffect(() => {
         if (photo && location && postTitle.length > 3) setAllowSubmit(false);
@@ -156,6 +142,8 @@ const CreatePostsScreen = () => {
             quality: 1,
         });
         if (!result.canceled) {
+            setLocation(null);
+            setPostTitle("");
             setShowModal(true);
             setPhoto(result.assets[0].uri);
         }
@@ -167,44 +155,17 @@ const CreatePostsScreen = () => {
             setShowCamera(false);
             await MediaLibrary.createAssetAsync(uri);
             setPhoto(uri);
+            setLocation(currentLocation);
         }
     };
 
-    const onPublic = async () => {
-        const post = {
-            userId,
-            photo,
-            postTitle,
-            location,
-            latitude: coords.latitude,
-            longitude: coords.longitude,
-            comments: 0,
-            likes: 0,
-            postDate: Date.now(),
-        };
-        setAllowSubmit(false);
-        try {
-            const docRef = await addDoc(collection(db, "posts"), {
-                ...post,
-            });
-            const postImageRef = ref(storage, `posts/${docRef.id}.jpg`);
-            const img = await fetch(post.photo);
-            const blobImg = await img.blob();
-            await uploadBytes(postImageRef, blobImg);
-            const avatarUrl = await getDownloadURL(ref(storage, postImageRef));
-            await updateDoc(docRef, {
-                photo: avatarUrl,
-                postId: docRef.id,
-            });
-            Alert.alert("Ви опубліковали повідомлення");
-            navigation.navigate("Posts");
-        } catch (error) {
-            setAllowSubmit(true);
-            return console.log(error.message);
+    const onShowCamera = async () => {
+        const { status } = await Camera.requestCameraPermissionsAsync();
+        if (status !== "granted") {
+            Alert.alert("Ви не надали доступ до камери");
+            return;
         }
-    };
-
-    const onShowCamera = () => {
+        await MediaLibrary.requestPermissionsAsync();
         setShowCamera(true);
     };
 
@@ -225,10 +186,51 @@ const CreatePostsScreen = () => {
             })
         );
 
+    const onSetCurrentLocation = () => {
+        setLocation(currentLocation);
+        setShowModal(false);
+    };
     const closeModal = () => setShowModal(false);
+
+    const onPublic = async () => {
+        const post = {
+            userId,
+            photo,
+            postTitle,
+            location,
+            latitude: coords.latitude,
+            longitude: coords.longitude,
+            comments: 0,
+            likes: 0,
+            postDate: Date.now(),
+        };
+        setAllowSubmit(false);
+        try {
+            setIsLoading(true);
+            const docRef = await addDoc(collection(db, "posts"), {
+                ...post,
+            });
+            const postImageRef = ref(storage, `posts/${docRef.id}.jpg`);
+            const img = await fetch(post.photo);
+            const blobImg = await img.blob();
+            await uploadBytes(postImageRef, blobImg);
+            const avatarUrl = await getDownloadURL(ref(storage, postImageRef));
+            await updateDoc(docRef, {
+                photo: avatarUrl,
+                postId: docRef.id,
+            });
+            setIsLoading(false);
+            Alert.alert("Ви опубліковали повідомлення");
+            navigation.navigate("Posts");
+        } catch (error) {
+            setAllowSubmit(true);
+            return console.log(error.message);
+        }
+    };
 
     return (
         <>
+            {isLoading && <Loader />}
             {showCamera && (
                 <Modal style={styles.cameraContainer}>
                     <Camera
@@ -240,9 +242,7 @@ const CreatePostsScreen = () => {
                     <View style={{ ...styles.btnWrapper, ...style }}>
                         <TouchableOpacity
                             style={{ padding: 10 }}
-                            onPress={() => {
-                                setShowCamera(false);
-                            }}
+                            onPress={() => setShowCamera(false)}
                         >
                             <SvgXml xml={iconCameraExit} />
                         </TouchableOpacity>
@@ -288,15 +288,21 @@ const CreatePostsScreen = () => {
                                 </Text>
                                 <BtnStyled
                                     onPress={goToMap}
+                                    bgColor="#FF6C00"
+                                    textColor="#fff"
                                     title="Обрати на мапі"
                                 />
                                 <BtnStyled
-                                    onPress={() => {}}
+                                    onPress={onSetCurrentLocation}
+                                    bgColor="#FF6C00"
+                                    textColor="#fff"
                                     title="Моє місцезнаходження"
                                 />
                                 <BtnStyled
                                     onPress={closeModal}
-                                    title="Не додавати"
+                                    bgColor="#FF6C00"
+                                    textColor="#fff"
+                                    title="Вихід"
                                 />
                             </View>
                         </View>

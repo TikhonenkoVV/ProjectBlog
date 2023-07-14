@@ -1,18 +1,23 @@
 import React from "react";
 import { StyleSheet } from "react-native";
 import { StatusBar } from "react-native";
-import { useEffect } from "react";
 import { FlatList } from "react-native-gesture-handler";
 import { useState } from "react";
 import { collection, onSnapshot } from "firebase/firestore";
 import { db } from "../../firebase-config";
 import { PostItem } from "../Components/PostItem";
 import { View } from "react-native";
+import { Loader } from "../Components/Loader";
+import { useEffect } from "react";
 
 const PostsScreen = () => {
     const [postsArray, setPostArray] = useState([]);
 
-    const gtPosts = () => {
+    useEffect(() => {
+        getPosts();
+    }, []);
+
+    const getPosts = () => {
         try {
             const snapShot = collection(db, "posts");
             onSnapshot(snapShot, (posts) => {
@@ -26,12 +31,9 @@ const PostsScreen = () => {
         }
     };
 
-    useEffect(() => {
-        gtPosts();
-    }, []);
-
     return (
         <>
+            {/* <Loader /> */}
             <FlatList
                 ListFooterComponent={<View style={{ height: 32 }} />}
                 style={styles.main}

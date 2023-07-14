@@ -100,8 +100,9 @@ const Home = () => {
                         <Pressable
                             style={{
                                 position: "absolute",
-                                top: 10,
+                                top: "50%",
                                 right: 16,
+                                transform: [{ translateY: -12 }],
                                 paddingRight: 16,
                                 zIndex: 1,
                             }}
